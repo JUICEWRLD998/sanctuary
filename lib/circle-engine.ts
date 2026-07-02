@@ -243,11 +243,41 @@ export async function runRound(id: string, opts: RunOptions = {}): Promise<Circl
 
   round.status = "running";
   state.phase = "active";
+  // Members flagged to miss this round (Phase 2 default simulation).
+  const defaulting = new Set(opts.defaults?.[r] ?? []);
+  round.defaulters = [];
   await saveCircle(state);
 
   // Every other member funds the pot toward the recipient (sequenced SPLITs).
+  // A defaulter moves nothing now — the escrow covers their share at completion.
   for (const member of members) {
     if (member.id === recipient.id) continue;
+
+    if (defaulting.has(member.id)) {
+      // A member's forfeited bond funds their own compensation, so their total
+      // missed contributions can never exceed their bond — otherwise the escrow
+      // would have to dip into other members' bonds and break conservation.
+      const alreadyForfeited = shortfallCausedBy(state, member.id);
+      if (alreadyForfeited + Number(state.contribution) > Number(state.bond)) {
+        throw new Error(
+          `${member.name} cannot default on round ${r + 1}: their ${state.bond} USDCx ` +
+            `bond already covers the maximum ${Number(state.bond) / Number(state.contribution)} ` +
+            `missed round(s). Raise the bond to allow more.`
+        );
+      }
+      round.defaulters.push(member.id);
+      record(state, opts, {
+        kind: "default",
+        label: `${member.name} misses round ${r + 1} — escrow will cover ${state.contribution} USDCx from their bond`,
+        round: r,
+        actor: member.address,
+        recipient: recipient.address,
+        amount: state.contribution,
+      });
+      await saveCircle(state);
+      continue;
+    }
+
     const txid = await routedDeposit(
       member.vault,
       { splitAddress: recipient.address, split: state.contribution, lock: "0" },
@@ -267,10 +297,15 @@ export async function runRound(id: string, opts: RunOptions = {}): Promise<Circl
     await saveCircle(state);
   }
 
+  round.shortfallUsdcx = String(round.defaulters.length * Number(state.contribution));
   round.status = "complete";
+  const shortfallNote =
+    round.defaulters.length > 0
+      ? ` (${round.contributionTxids.length} contributed now, ${round.shortfallUsdcx} USDCx covered by escrow at completion)`
+      : "";
   record(state, opts, {
     kind: "payout",
-    label: `${recipient.name} receives the round ${r + 1} pot: ${round.potUsdcx} USDCx`,
+    label: `${recipient.name} receives the round ${r + 1} pot: ${round.potUsdcx} USDCx${shortfallNote}`,
     round: r,
     recipient: recipient.address,
     amount: round.potUsdcx,
@@ -325,20 +360,68 @@ export async function complete(id: string, opts: RunOptions = {}): Promise<Circl
   });
   await saveCircle(state);
 
-  // …then SPLIT each member's bond back to them.
-  for (const member of members) {
+  // 1) Compensation — make every shorted recipient whole from the forfeited
+  // bonds. This is the money-move a pure-v2 vault can't do (implementation.md
+  // §3 step 5); it settles here rather than mid-round because the bonds are
+  // LOCKed until the circle ends, so the escrow only has movable funds now.
+  for (const round of state.rounds) {
+    const shortfall = defaultersOf(round).length * Number(state.contribution);
+    if (shortfall <= 0) continue;
+    const recipient = members[round.recipientId];
+    const amount = String(shortfall);
     const txid = await routedDeposit(
       escrow.vault,
-      { splitAddress: member.address, split: state.bond, lock: "0" },
-      state.bond,
+      { splitAddress: recipient.address, split: amount, lock: "0" },
+      amount,
+      opts
+    );
+    round.compensationTxids.push(txid);
+    record(state, opts, {
+      kind: "compensation",
+      label: `Escrow makes ${recipient.name} whole for round ${round.index + 1}: ${amount} USDCx from forfeited bonds`,
+      round: round.index,
+      actor: escrow.address,
+      recipient: recipient.address,
+      amount,
+      txid,
+    });
+    await saveCircle(state);
+  }
+
+  // 2) Bond return — return each member's bond MINUS whatever they forfeited to
+  // cover their own defaults. A member who never defaulted gets their full bond
+  // back; a defaulter's forfeit already funded the compensation above.
+  for (const member of members) {
+    const returnable = Number(state.bond) - shortfallCausedBy(state, member.id);
+
+    if (returnable <= 0) {
+      record(state, opts, {
+        kind: "note",
+        label: `${member.name} forfeits their ${state.bond} USDCx bond — it covered their missed contribution(s)`,
+        actor: escrow.address,
+        recipient: member.address,
+        amount: state.bond,
+      });
+      await saveCircle(state);
+      continue;
+    }
+
+    const amount = String(returnable);
+    const full = returnable === Number(state.bond);
+    const txid = await routedDeposit(
+      escrow.vault,
+      { splitAddress: member.address, split: amount, lock: "0" },
+      amount,
       opts
     );
     record(state, opts, {
       kind: "bond-return",
-      label: `Escrow returns ${member.name}'s ${state.bond} USDCx bond`,
+      label: full
+        ? `Escrow returns ${member.name}'s ${amount} USDCx bond`
+        : `Escrow returns ${member.name}'s remaining ${amount} USDCx bond (rest forfeited to their default)`,
       actor: escrow.address,
       recipient: member.address,
-      amount: state.bond,
+      amount,
       txid,
     });
     await saveCircle(state);
