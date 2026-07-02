@@ -20,8 +20,9 @@ export type EventKind =
   | "bond" // member forwards their commitment bond to escrow (SPLIT)
   | "escrow-lock" // escrow locks the pooled bonds (LOCK)
   | "contribution" // a member funds a round toward the recipient (SPLIT)
+  | "default" // a member missed their contribution this round (no funds moved) — Phase 2
   | "payout" // marker: a round's pot has fully landed on the recipient
-  | "compensation" // escrow makes a shorted recipient whole (SPLIT) — Phase 2
+  | "compensation" // escrow makes a shorted recipient whole from forfeited bonds (SPLIT) — Phase 2
   | "bond-return" // escrow returns a bond after completion (SPLIT)
   | "note"; // non-chain lifecycle marker
 
@@ -54,6 +55,16 @@ export interface RoundRecord {
   contributionTxids: string[];
   /** Pot the recipient receives = (memberCount - 1) × contribution, whole USDCx. */
   potUsdcx: string;
+  /**
+   * Member ids who failed to contribute this round (Phase 2). A default moves
+   * no funds during the round — the recipient is made whole at completion from
+   * the defaulter's forfeited bond.
+   */
+  defaulters: number[];
+  /** Amount the recipient was shorted this round (whole USDCx) = defaulters × contribution. */
+  shortfallUsdcx: string;
+  /** Escrow compensation txids that made the recipient whole (settled at completion). */
+  compensationTxids: string[];
 }
 
 /** The complete persisted state of one savings circle. */

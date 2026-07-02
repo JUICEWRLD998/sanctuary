@@ -46,6 +46,14 @@ export interface RunOptions {
   confirm?: boolean;
   /** Optional hook fired after every recorded event (progress logging). */
   onEvent?: (event: LedgerEvent) => void;
+  /**
+   * Phase 2 — simulate defaults. Maps a 0-based round index to the member ids
+   * who miss their contribution that round. Those members move no funds during
+   * the round; the escrow makes the shorted recipient whole from the
+   * defaulter's forfeited bond at {@link complete}. Propagates through
+   * runAllRounds/autopilot. Omit for the honest, no-default happy path.
+   */
+  defaults?: Record<number, number[]>;
 }
 
 /** Total commitment bonds pooled in the escrow (whole USDCx, as a string). */
@@ -56,6 +64,21 @@ function totalBonds(): string {
 /** Pot a recipient receives each round (whole USDCx, as a string). */
 function potPerRound(): string {
   return String((CIRCLE.memberCount - 1) * Number(CIRCLE.contribution));
+}
+
+/** Defaulters recorded on a round, tolerating legacy circles without the field. */
+function defaultersOf(round: RoundRecord): number[] {
+  return round.defaulters ?? [];
+}
+
+/**
+ * Total USDCx a member owes the pool from all the rounds they defaulted on:
+ * (rounds defaulted) × contribution. This is deducted from their bond at
+ * completion (the forfeit that funds each shorted recipient's compensation).
+ */
+function shortfallCausedBy(state: CircleState, memberId: number): number {
+  const rounds = state.rounds.filter((r) => defaultersOf(r).includes(memberId)).length;
+  return rounds * Number(state.contribution);
 }
 
 /** Wait for a tx to reach a terminal state; throw if it did not succeed. */
@@ -109,6 +132,9 @@ export async function createCircle(id: string): Promise<CircleState> {
     status: "pending",
     contributionTxids: [],
     potUsdcx: potPerRound(),
+    defaulters: [],
+    shortfallUsdcx: "0",
+    compensationTxids: [],
   }));
 
   const state: CircleState = {
