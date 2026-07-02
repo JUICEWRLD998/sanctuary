@@ -24,8 +24,12 @@ export const USDCX_DECIMALS = 6;
  * for real on testnet — every transaction in the demo is genuine, not mocked.
  */
 export const CIRCLE = {
-  memberCount: 6,
-  rounds: 6,
+  // Scoped to the 3 testnet wallets that are actually USDCx-funded (Amara,
+  // Chidi, Fatima = MEMBER_1/2/3_KEY). A 3-member circle completes a full,
+  // real on-chain lifecycle within existing funds; bump both back to 6 if the
+  // remaining three wallets (Marco/Priya/Kwame) ever get USDCx + STX gas.
+  memberCount: 3,
+  rounds: 3,
   /** Each member contributes this per round they are NOT the recipient. */
   contribution: "1",
   /** Commitment bond escrowed at join, locked until the circle completes. */

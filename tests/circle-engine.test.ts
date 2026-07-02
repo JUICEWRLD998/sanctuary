@@ -21,6 +21,7 @@ vi.mock("../lib/explorer", () => ({
 }));
 
 vi.mock("../lib/flow", () => ({
+  currentBlock: async () => chain.block,
   setStrategy: async () => ({ txid: `strat-${chain.txCounter++}` }),
   deposit: async () => ({ txid: `dep-${chain.txCounter++}` }),
   withdraw: async () => ({ txid: `wd-${chain.txCounter++}` }),
@@ -82,7 +83,7 @@ describe("circle-engine lifecycle", () => {
     const c = await createCircle(ID);
     expect(c.phase).toBe("forming");
     expect(c.rounds).toHaveLength(N);
-    expect(c.payoutOrder).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(c.payoutOrder).toEqual(Array.from({ length: N }, (_, i) => i));
     // pot = (N-1) × contribution
     for (const r of c.rounds) {
       expect(r.potUsdcx).toBe(String(nonRecipients * Number(CIRCLE.contribution)));

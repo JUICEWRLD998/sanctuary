@@ -26,7 +26,7 @@
  */
 import { CIRCLE } from "./constants";
 import { waitForTx } from "./explorer";
-import { deposit, setStrategy, withdraw, type Strategy } from "./flow";
+import { currentBlock, deposit, setStrategy, withdraw, type Strategy } from "./flow";
 import { getCircleActors, type Actor, type EscrowActor } from "./members";
 import {
   appendEvent,
@@ -152,9 +152,9 @@ export async function join(id: string, opts: RunOptions = {}): Promise<CircleSta
   state.escrow.address = escrow.address;
 
   // Establish the lock window relative to the current tip (short, per §6).
-  const currentBlock = await escrow.vault.getCurrentBlockHeight(escrow.address);
-  const endBlock = currentBlock + CIRCLE.lockWindowBlocks;
-  state.createdBlock = currentBlock;
+  const tip = await currentBlock(escrow.vault, escrow.address);
+  const endBlock = tip + CIRCLE.lockWindowBlocks;
+  state.createdBlock = tip;
   state.endBlock = endBlock;
 
   // 1) Each member SPLITs their bond to the escrow principal.
@@ -278,12 +278,12 @@ export async function complete(id: string, opts: RunOptions = {}): Promise<Circl
   const { escrow, members } = getCircleActors();
 
   // The lock must have expired for the escrow to reclaim the bonds.
-  const currentBlock = await escrow.vault.getCurrentBlockHeight(escrow.address);
-  if (state.endBlock !== null && currentBlock < state.endBlock) {
-    const remaining = state.endBlock - currentBlock;
+  const tip = await currentBlock(escrow.vault, escrow.address);
+  if (state.endBlock !== null && tip < state.endBlock) {
+    const remaining = state.endBlock - tip;
     throw new Error(
       `Escrow bond-lock still active: ${remaining} block(s) until ${state.endBlock} ` +
-        `(current ${currentBlock}). Wait for expiry, then complete.`
+        `(current ${tip}). Wait for expiry, then complete.`
     );
   }
 
@@ -336,8 +336,8 @@ export async function autopilot(id: string, opts: RunOptions = {}): Promise<Circ
   // Completion depends on lock expiry; skip gracefully if still locked.
   if (state.currentRound >= state.rounds.length && state.phase !== "complete") {
     const { escrow } = getCircleActors();
-    const currentBlock = await escrow.vault.getCurrentBlockHeight(escrow.address);
-    if (state.endBlock === null || currentBlock >= state.endBlock) {
+    const tip = await currentBlock(escrow.vault, escrow.address);
+    if (state.endBlock === null || tip >= state.endBlock) {
       state = await complete(id, opts);
     }
   }

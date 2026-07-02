@@ -53,7 +53,7 @@ export async function getTxStatus(txid: string): Promise<TxStatus> {
  */
 export async function waitForTx(
   txid: string,
-  { timeoutMs = 180_000, intervalMs = 4_000 }: { timeoutMs?: number; intervalMs?: number } = {}
+  { timeoutMs = 180_000, intervalMs = 7_000 }: { timeoutMs?: number; intervalMs?: number } = {}
 ): Promise<TxStatus> {
   const start = Date.now();
   // eslint-disable-next-line no-constant-condition

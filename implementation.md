@@ -19,6 +19,8 @@ The FlowVault bounty rewards **new financial behaviors** built on programmable U
 
 **Confirmed scope — Solo, polished MVP.** One killer ~3-min demo, ≥1 real testnet circle, strong README + video. **Cut:** multi-circle management, auth, mobile.
 
+> **Scoping note (funding-driven): the live demo circle runs 3 members, not 6.** Only three managed wallets (Amara/Chidi/Fatima = `MEMBER_1/2/3_KEY`) received testnet USDCx; the other three hold none and cannot be funded (USDCx is protocol-mint-gated, dispensed manually). A 3-member circle completes a full real on-chain lifecycle within existing funds and exercises all three primitives identically. `CIRCLE.memberCount`/`rounds` and `MEMBER_PROFILES` are set to 3; bump both back to 6 (uncomment the extra profiles) if the remaining wallets are ever funded.
+
 ---
 
 ## 2. SDK facts we rely on (verified — `flowvault-sdk@0.1.2`)
@@ -99,7 +101,9 @@ sanctuary/
 - [x] `lib/circle-engine.ts`: `join` (bond→escrow), escrow **LOCK** until `circleEndBlock`, `runRound` (sequenced splits → recipient), `complete`, bond return. *(plus `autopilot` end-to-end driver; strategy→deposit are confirmed on-chain in order.)*
 - [x] `app/api/orchestrator/route.ts` drives managed members; `app/api/circle/route.ts` reads live state (with explorer links).
 
-**Done when:** a full circle (join → all rounds → complete) executes via the API with real testnet txids in the ledger. *(Engine + API built and verified: `tsc`, `next build`, and a keyless smoke run of `create`/read/`join`-guard all pass. The live on-chain run — producing real txids — is unblocked the moment the managed testnet keys + USDCx funding from Phase 0 are in `.env.local`.)*
+**Done when:** a full circle (join → all rounds → complete) executes via the API with real testnet txids in the ledger. ✅ **VERIFIED LIVE (3-member circle).** Full lifecycle ran on testnet — 3 bond SPLITs → escrow LOCK → 3 rounds (6 contributions, 3 payouts, Amara → Chidi → Fatima) → lock expiry → escrow reclaim + 3 bond-returns = **14 real on-chain txs**, `phase = "complete"`, escrow vault drained to 0 (all bonds returned). Ledger at `data/circles/demo.json`. Escrow lock tx `0xb68df8…a2cf`; final bond-return `0x31f02c…1d38`.
+>
+> Tooling added for repeatable verification: `npm run verify:phase1` (read-only pre-flight — per-account STX/USDCx GO/NO-GO) and `npm run phase1:run` (drives the autopilot with confirmation, then asserts the ledger invariants + a live escrow read). Rate-limit resilience added to `lib/flow.ts` (429 exponential backoff) after the free-tier Hiro API throttled a mid-run burst.
 
 ### Phase 2 — Robustness & correctness (Day 3)
 **Goal:** handle defaults and prove the math.

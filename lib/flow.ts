@@ -39,6 +39,32 @@ export interface TxRef {
   txid: string;
 }
 
+/**
+ * Retry a network op through Hiro's public API when it trips the free-tier rate
+ * limit (HTTP 429). The SDK fires several requests per transaction (fee
+ * estimation, nonce, broadcast) so bursts can exceed the per-minute quota; we
+ * back off and retry rather than fail the whole run.
+ *
+ * IMPORTANT: only retry errors that occur BEFORE a transaction is broadcast
+ * (fee estimation / nonce fetch) — re-running a broadcast would double-spend a
+ * nonce. Hiro's 429s on the mutating path surface at fee estimation ("Error
+ * estimating transaction fee"), which is pre-broadcast and therefore safe.
+ */
+async function withRateLimitRetry<T>(fn: () => Promise<T>, tries = 6): Promise<T> {
+  let delayMs = 8_000;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const rateLimited = /\b429\b|too many requests|rate limit/i.test(msg);
+      if (!rateLimited || attempt >= tries) throw err;
+      await new Promise((r) => setTimeout(r, delayMs));
+      delayMs = Math.min(delayMs * 2, 60_000); // cap backoff at 60s
+    }
+  }
+}
+
 /** Build a FlowVault client bound to a signer key (backend automation mode). */
 export function vaultFor(senderKey: string): FlowVault {
   return new FlowVault({
@@ -62,7 +88,7 @@ function extractTxid(result: unknown): string {
 
 /** Current Stacks tip height (needs any principal for the read call). */
 export async function currentBlock(vault: FlowVault, principal: string): Promise<number> {
-  return vault.getCurrentBlockHeight(principal);
+  return withRateLimitRetry(() => vault.getCurrentBlockHeight(principal));
 }
 
 /**
@@ -82,10 +108,10 @@ export async function setStrategyAndDeposit(
     splitAmount: tokenToMicro(strategy.split ?? "0"),
   };
 
-  const strategyResult = await vault.createStrategy(rules);
+  const strategyResult = await withRateLimitRetry(() => vault.createStrategy(rules));
   const strategyTx = { txid: extractTxid(strategyResult) };
 
-  const depositResult = await vault.deposit(tokenToMicro(depositAmount));
+  const depositResult = await withRateLimitRetry(() => vault.deposit(tokenToMicro(depositAmount)));
   const depositTx = { txid: extractTxid(depositResult) };
 
   return { strategyTx, depositTx };
@@ -103,31 +129,31 @@ export async function setStrategy(vault: FlowVault, strategy: Strategy): Promise
     splitAddress: strategy.splitAddress ?? null,
     splitAmount: tokenToMicro(strategy.split ?? "0"),
   };
-  const result = await vault.createStrategy(rules);
+  const result = await withRateLimitRetry(() => vault.createStrategy(rules));
   return { txid: extractTxid(result) };
 }
 
 /** Plain deposit with whatever strategy is already set (or none). */
 export async function deposit(vault: FlowVault, amount: string): Promise<TxRef> {
-  const result = await vault.deposit(tokenToMicro(amount));
+  const result = await withRateLimitRetry(() => vault.deposit(tokenToMicro(amount)));
   return { txid: extractTxid(result) };
 }
 
 /** Withdraw unlocked funds. */
 export async function withdraw(vault: FlowVault, amount: string): Promise<TxRef> {
-  const result = await vault.withdraw(tokenToMicro(amount));
+  const result = await withRateLimitRetry(() => vault.withdraw(tokenToMicro(amount)));
   return { txid: extractTxid(result) };
 }
 
 /** Clear any routing rules so future deposits go straight to unlocked. */
 export async function clearStrategy(vault: FlowVault): Promise<TxRef> {
-  const result = await vault.clearRoutingRules();
+  const result = await withRateLimitRetry(() => vault.clearRoutingRules());
   return { txid: extractTxid(result) };
 }
 
 /** Read-only, auditable vault state for a principal, in whole USDCx. */
 export async function readState(vault: FlowVault, address: string): Promise<VaultState> {
-  const s = await vault.getVaultState(address);
+  const s = await withRateLimitRetry(() => vault.getVaultState(address));
   return {
     address,
     total: microToToken(s.totalBalance),

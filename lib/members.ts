@@ -35,16 +35,22 @@ export interface Actor extends Omit<MemberProfile, never> {
 }
 
 /**
- * The six demo members. Names/reasons are illustrative diaspora + community
- * savings stories — the kind of real circle Sanctuary is built for.
+ * The demo members. Names/reasons are illustrative diaspora + community savings
+ * stories — the kind of real circle Sanctuary is built for.
+ *
+ * Scoped to the three USDCx-funded testnet wallets (MEMBER_1/2/3_KEY). The three
+ * additional members below are kept, commented, so the circle can be restored to
+ * six the moment their wallets are funded — just uncomment them and set
+ * CIRCLE.memberCount / rounds back to 6 in lib/constants.ts. The array length
+ * must equal CIRCLE.memberCount.
  */
 export const MEMBER_PROFILES: readonly MemberProfile[] = [
   { id: 0, name: "Amara", city: "Lagos", reason: "School fees for her daughter", emoji: "🌸" },
   { id: 1, name: "Chidi", city: "London", reason: "First month's rent deposit", emoji: "🏠" },
   { id: 2, name: "Fatima", city: "Nairobi", reason: "A refrigerator for her shop", emoji: "🧊" },
-  { id: 3, name: "Marco", city: "Lisbon", reason: "Tools to start contracting", emoji: "🔧" },
-  { id: 4, name: "Priya", city: "Toronto", reason: "A visa application fee", emoji: "✈️" },
-  { id: 5, name: "Kwame", city: "Accra", reason: "Seed stock for market week", emoji: "🌾" },
+  // { id: 3, name: "Marco", city: "Lisbon", reason: "Tools to start contracting", emoji: "🔧" },
+  // { id: 4, name: "Priya", city: "Toronto", reason: "A visa application fee", emoji: "✈️" },
+  // { id: 5, name: "Kwame", city: "Accra", reason: "Seed stock for market week", emoji: "🌾" },
 ] as const;
 
 /** Escrow display metadata (the app-run coordinator principal). */
