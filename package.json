@@ -6,13 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@stacks/connect": "^8.2.6",
     "@stacks/network": "^7.5.0",
     "@stacks/transactions": "^7.5.0",
     "flowvault-sdk": "^0.1.2",
+    "framer-motion": "^12.42.2",
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18"

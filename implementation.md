@@ -95,11 +95,11 @@ sanctuary/
 
 ### Phase 1 — Orchestration engine (Day 2)
 **Goal:** the circle runs on managed accounts.
-- [ ] `lib/members.ts` (6 demo members, keys from env), `lib/ledger.ts` (JSON persistence).
-- [ ] `lib/circle-engine.ts`: `join` (bond→escrow), escrow **LOCK** until `circleEndBlock`, `runRound` (sequenced splits → recipient), `complete`, bond return.
-- [ ] `app/api/orchestrator/route.ts` drives managed members; `app/api/circle/route.ts` reads live state.
+- [x] `lib/members.ts` (6 demo members, keys from env), `lib/ledger.ts` (JSON persistence). *(also `lib/env.ts` for server-only key access.)*
+- [x] `lib/circle-engine.ts`: `join` (bond→escrow), escrow **LOCK** until `circleEndBlock`, `runRound` (sequenced splits → recipient), `complete`, bond return. *(plus `autopilot` end-to-end driver; strategy→deposit are confirmed on-chain in order.)*
+- [x] `app/api/orchestrator/route.ts` drives managed members; `app/api/circle/route.ts` reads live state (with explorer links).
 
-**Done when:** a full circle (join → all rounds → complete) executes via the API with real testnet txids in the ledger.
+**Done when:** a full circle (join → all rounds → complete) executes via the API with real testnet txids in the ledger. *(Engine + API built and verified: `tsc`, `next build`, and a keyless smoke run of `create`/read/`join`-guard all pass. The live on-chain run — producing real txids — is unblocked the moment the managed testnet keys + USDCx funding from Phase 0 are in `.env.local`.)*
 
 ### Phase 2 — Robustness & correctness (Day 3)
 **Goal:** handle defaults and prove the math.
