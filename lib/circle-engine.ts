@@ -1,0 +1,349 @@
+/**
+ * lib/circle-engine.ts — the rotating savings-circle state machine.
+ *
+ * This is Sanctuary's technical centrepiece and its reusable ecosystem
+ * contribution (implementation.md §4): a documented TypeScript layer over
+ * `flowvault-sdk` that composes the three FlowVault primitives — LOCK, SPLIT,
+ * HOLD — into a self-driving ROSCA that anyone can fork.
+ *
+ * Lifecycle
+ *   createCircle → join → (runRound × N) → complete
+ *
+ * Primitive mapping (see implementation.md §3)
+ *   join      → each member SPLITs a bond into the escrow principal
+ *   join      → escrow LOCKs the pooled bonds until `endBlock`
+ *   runRound  → every non-recipient member SPLITs their contribution to the
+ *               round's recipient; recipient receives (N-1) × contribution
+ *   complete  → after lock expiry, escrow returns each member's bond (SPLIT)
+ *
+ * Sequencing note. FlowVault applies a principal's stored routing rules on its
+ * *next* deposit, so for every routed deposit we broadcast `set-routing-rules`,
+ * wait for it to confirm, then broadcast the `deposit`. Same-sender txs are thus
+ * strictly ordered, which also keeps nonces clean. Confirmation can be disabled
+ * (`confirm: false`) for fast local dry-runs, but real testnet runs need it.
+ *
+ * SERVER-ONLY — signs with managed keys via lib/members.ts.
+ */
+import { CIRCLE } from "./constants";
+import { waitForTx } from "./explorer";
+import { deposit, setStrategy, withdraw, type Strategy } from "./flow";
+import { getCircleActors, type Actor, type EscrowActor } from "./members";
+import {
+  appendEvent,
+  loadCircle,
+  saveCircle,
+  type CircleState,
+  type EventKind,
+  type LedgerEvent,
+  type RoundRecord,
+} from "./ledger";
+
+export interface RunOptions {
+  /**
+   * Wait for each broadcast tx to settle on-chain before firing the next
+   * dependent one. Default `true` (required for real testnet correctness).
+   */
+  confirm?: boolean;
+  /** Optional hook fired after every recorded event (progress logging). */
+  onEvent?: (event: LedgerEvent) => void;
+}
+
+/** Total commitment bonds pooled in the escrow (whole USDCx, as a string). */
+function totalBonds(): string {
+  return String(CIRCLE.memberCount * Number(CIRCLE.bond));
+}
+
+/** Pot a recipient receives each round (whole USDCx, as a string). */
+function potPerRound(): string {
+  return String((CIRCLE.memberCount - 1) * Number(CIRCLE.contribution));
+}
+
+/** Wait for a tx to reach a terminal state; throw if it did not succeed. */
+async function confirm(txid: string): Promise<void> {
+  const status = await waitForTx(txid);
+  if (status !== "success") {
+    throw new Error(`Transaction ${txid} did not confirm (status: ${status}).`);
+  }
+}
+
+/**
+ * The core money-move: set a routing strategy, (optionally) wait for it, then
+ * deposit — so FlowVault applies LOCK/SPLIT/HOLD atomically on that deposit.
+ * Returns the deposit txid (the moment funds actually move).
+ */
+async function routedDeposit(
+  vault: Actor["vault"] | EscrowActor["vault"],
+  strategy: Strategy,
+  amount: string,
+  opts: RunOptions
+): Promise<string> {
+  const strat = await setStrategy(vault, strategy);
+  if (opts.confirm !== false) await confirm(strat.txid);
+
+  const dep = await deposit(vault, amount);
+  if (opts.confirm !== false) await confirm(dep.txid);
+
+  return dep.txid;
+}
+
+/** Append an event, persist nothing, and fire the progress hook. */
+function record(
+  state: CircleState,
+  opts: RunOptions,
+  event: Omit<LedgerEvent, "at">
+): void {
+  appendEvent(state, event);
+  const last = state.events[state.events.length - 1];
+  opts.onEvent?.(last);
+}
+
+/**
+ * Create a fresh, empty circle with the standard 6-member payout order and
+ * pending rounds. Idempotent per id only in the sense that it overwrites.
+ */
+export async function createCircle(id: string): Promise<CircleState> {
+  const payoutOrder = Array.from({ length: CIRCLE.memberCount }, (_, i) => i);
+  const rounds: RoundRecord[] = payoutOrder.map((recipientId, index) => ({
+    index,
+    recipientId,
+    status: "pending",
+    contributionTxids: [],
+    potUsdcx: potPerRound(),
+  }));
+
+  const state: CircleState = {
+    id,
+    phase: "forming",
+    memberCount: CIRCLE.memberCount,
+    contribution: CIRCLE.contribution,
+    bond: CIRCLE.bond,
+    payoutOrder,
+    currentRound: 0,
+    createdBlock: null,
+    endBlock: null,
+    escrow: { address: null, bondLockTxid: null },
+    rounds,
+    events: [],
+    updatedAt: new Date().toISOString(),
+  };
+
+  return saveCircle(state);
+}
+
+/** Load an existing circle or throw a clear error. */
+async function requireCircle(id: string): Promise<CircleState> {
+  const state = await loadCircle(id);
+  if (!state) throw new Error(`Circle "${id}" not found. Create it first.`);
+  return state;
+}
+
+/**
+ * Phase 1 — Join. Every member SPLITs their bond into the escrow; then the
+ * escrow LOCKs the pooled bonds until `endBlock`. Moves the circle
+ * `forming → bonded`.
+ */
+export async function join(id: string, opts: RunOptions = {}): Promise<CircleState> {
+  const state = await requireCircle(id);
+  if (state.phase !== "forming") {
+    throw new Error(`join() requires phase "forming", got "${state.phase}".`);
+  }
+
+  const { escrow, members } = getCircleActors();
+  state.escrow.address = escrow.address;
+
+  // Establish the lock window relative to the current tip (short, per §6).
+  const currentBlock = await escrow.vault.getCurrentBlockHeight(escrow.address);
+  const endBlock = currentBlock + CIRCLE.lockWindowBlocks;
+  state.createdBlock = currentBlock;
+  state.endBlock = endBlock;
+
+  // 1) Each member SPLITs their bond to the escrow principal.
+  for (const member of members) {
+    const txid = await routedDeposit(
+      member.vault,
+      { splitAddress: escrow.address, split: state.bond, lock: "0" },
+      state.bond,
+      opts
+    );
+    record(state, opts, {
+      kind: "bond",
+      label: `${member.name} bonds ${state.bond} USDCx into escrow`,
+      actor: member.address,
+      recipient: escrow.address,
+      amount: state.bond,
+      txid,
+    });
+    await saveCircle(state);
+  }
+
+  // 2) Escrow LOCKs the pooled bonds until the circle ends. The trust anchor.
+  const lockTxid = await routedDeposit(
+    escrow.vault,
+    { lock: totalBonds(), lockUntilBlock: endBlock, splitAddress: null, split: "0" },
+    totalBonds(),
+    opts
+  );
+  state.escrow.bondLockTxid = lockTxid;
+  record(state, opts, {
+    kind: "escrow-lock",
+    label: `Escrow locks ${totalBonds()} USDCx of bonds until block ${endBlock}`,
+    actor: escrow.address,
+    amount: totalBonds(),
+    txid: lockTxid,
+  });
+
+  state.phase = "bonded";
+  return saveCircle(state);
+}
+
+/**
+ * Phase 1 — Run one round. Every non-recipient member SPLITs their contribution
+ * to the round's recipient. Recipient receives (N-1) × contribution. Advances
+ * `currentRound` and moves the circle `bonded → active`.
+ */
+export async function runRound(id: string, opts: RunOptions = {}): Promise<CircleState> {
+  const state = await requireCircle(id);
+  if (state.phase !== "bonded" && state.phase !== "active") {
+    throw new Error(`runRound() requires phase "bonded" or "active", got "${state.phase}".`);
+  }
+  if (state.currentRound >= state.rounds.length) {
+    throw new Error("All rounds are already complete.");
+  }
+
+  const { members } = getCircleActors();
+  const r = state.currentRound;
+  const round = state.rounds[r];
+  const recipient = members[round.recipientId];
+
+  round.status = "running";
+  state.phase = "active";
+  await saveCircle(state);
+
+  // Every other member funds the pot toward the recipient (sequenced SPLITs).
+  for (const member of members) {
+    if (member.id === recipient.id) continue;
+    const txid = await routedDeposit(
+      member.vault,
+      { splitAddress: recipient.address, split: state.contribution, lock: "0" },
+      state.contribution,
+      opts
+    );
+    round.contributionTxids.push(txid);
+    record(state, opts, {
+      kind: "contribution",
+      label: `${member.name} → ${recipient.name}: ${state.contribution} USDCx (round ${r + 1})`,
+      round: r,
+      actor: member.address,
+      recipient: recipient.address,
+      amount: state.contribution,
+      txid,
+    });
+    await saveCircle(state);
+  }
+
+  round.status = "complete";
+  record(state, opts, {
+    kind: "payout",
+    label: `${recipient.name} receives the round ${r + 1} pot: ${round.potUsdcx} USDCx`,
+    round: r,
+    recipient: recipient.address,
+    amount: round.potUsdcx,
+  });
+
+  state.currentRound = r + 1;
+  return saveCircle(state);
+}
+
+/** Run every remaining round back-to-back. */
+export async function runAllRounds(id: string, opts: RunOptions = {}): Promise<CircleState> {
+  let state = await requireCircle(id);
+  while (state.currentRound < state.rounds.length) {
+    state = await runRound(id, opts);
+  }
+  return state;
+}
+
+/**
+ * Phase 1 — Complete. After the escrow's bond-lock has expired, the escrow
+ * reclaims the pooled bonds and SPLITs each member's bond back to them. Moves
+ * the circle `active → complete`.
+ */
+export async function complete(id: string, opts: RunOptions = {}): Promise<CircleState> {
+  const state = await requireCircle(id);
+  if (state.currentRound < state.rounds.length) {
+    throw new Error("Cannot complete: not all rounds have run yet.");
+  }
+  if (state.phase === "complete") return state;
+
+  const { escrow, members } = getCircleActors();
+
+  // The lock must have expired for the escrow to reclaim the bonds.
+  const currentBlock = await escrow.vault.getCurrentBlockHeight(escrow.address);
+  if (state.endBlock !== null && currentBlock < state.endBlock) {
+    const remaining = state.endBlock - currentBlock;
+    throw new Error(
+      `Escrow bond-lock still active: ${remaining} block(s) until ${state.endBlock} ` +
+        `(current ${currentBlock}). Wait for expiry, then complete.`
+    );
+  }
+
+  // Reclaim the now-unlocked bonds from the escrow vault to its wallet…
+  const reclaim = await withdraw(escrow.vault, totalBonds());
+  if (opts.confirm !== false) await confirm(reclaim.txid);
+  record(state, opts, {
+    kind: "note",
+    label: `Escrow reclaims ${totalBonds()} USDCx (lock expired)`,
+    actor: escrow.address,
+    amount: totalBonds(),
+    txid: reclaim.txid,
+  });
+  await saveCircle(state);
+
+  // …then SPLIT each member's bond back to them.
+  for (const member of members) {
+    const txid = await routedDeposit(
+      escrow.vault,
+      { splitAddress: member.address, split: state.bond, lock: "0" },
+      state.bond,
+      opts
+    );
+    record(state, opts, {
+      kind: "bond-return",
+      label: `Escrow returns ${member.name}'s ${state.bond} USDCx bond`,
+      actor: escrow.address,
+      recipient: member.address,
+      amount: state.bond,
+      txid,
+    });
+    await saveCircle(state);
+  }
+
+  state.phase = "complete";
+  return saveCircle(state);
+}
+
+/**
+ * Drive an entire circle end-to-end on the managed accounts: create (if new),
+ * join, run all rounds, and — if the lock has expired — complete. This is the
+ * "autopilot" the orchestrator route exposes.
+ */
+export async function autopilot(id: string, opts: RunOptions = {}): Promise<CircleState> {
+  let state = (await loadCircle(id)) ?? (await createCircle(id));
+
+  if (state.phase === "forming") state = await join(id, opts);
+  if (state.phase === "bonded" || state.phase === "active") state = await runAllRounds(id, opts);
+
+  // Completion depends on lock expiry; skip gracefully if still locked.
+  if (state.currentRound >= state.rounds.length && state.phase !== "complete") {
+    const { escrow } = getCircleActors();
+    const currentBlock = await escrow.vault.getCurrentBlockHeight(escrow.address);
+    if (state.endBlock === null || currentBlock >= state.endBlock) {
+      state = await complete(id, opts);
+    }
+  }
+
+  return state;
+}
+
+/** Re-export kinds for consumers that render the ledger. */
+export type { EventKind };

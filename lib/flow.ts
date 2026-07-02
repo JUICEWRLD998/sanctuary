@@ -91,6 +91,22 @@ export async function setStrategyAndDeposit(
   return { strategyTx, depositTx };
 }
 
+/**
+ * Set (only) a routing strategy on-chain. The engine confirms this tx before
+ * the deposit that consumes it, since FlowVault applies the stored rules at the
+ * moment of the *next* deposit.
+ */
+export async function setStrategy(vault: FlowVault, strategy: Strategy): Promise<TxRef> {
+  const rules = {
+    lockAmount: tokenToMicro(strategy.lock ?? "0"),
+    lockUntilBlock: strategy.lockUntilBlock ?? 0,
+    splitAddress: strategy.splitAddress ?? null,
+    splitAmount: tokenToMicro(strategy.split ?? "0"),
+  };
+  const result = await vault.createStrategy(rules);
+  return { txid: extractTxid(result) };
+}
+
 /** Plain deposit with whatever strategy is already set (or none). */
 export async function deposit(vault: FlowVault, amount: string): Promise<TxRef> {
   const result = await vault.deposit(tokenToMicro(amount));
