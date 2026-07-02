@@ -22,7 +22,7 @@ import { config as loadEnv } from "dotenv";
 import { getAddressFromPrivateKey } from "@stacks/transactions";
 import { tokenToMicro } from "flowvault-sdk";
 import { NETWORK, FLOWVAULT, CIRCLE } from "../lib/constants";
-import { HIRO_API, txUrl, addressUrl } from "../lib/explorer";
+import { HIRO_API, eventUrl, addressUrl } from "../lib/explorer";
 import { vaultFor, readState } from "../lib/flow";
 import { autopilot } from "../lib/circle-engine";
 import { deleteCircle, loadCircle, type LedgerEvent } from "../lib/ledger";
@@ -98,8 +98,8 @@ async function main() {
 
   console.log("🚀 Running autopilot (create → join → rounds → complete)…\n");
   const onEvent = (e: LedgerEvent) => {
-    const link = e.txid ? `  ${txUrl(e.txid)}` : "";
-    console.log(`   • [${e.kind}] ${e.label}${link}`);
+    const url = eventUrl(e);
+    console.log(`   • [${e.kind}] ${e.label}${url ? `  ${url}` : ""}`);
   };
 
   await autopilot(ID, { confirm: true, onEvent });

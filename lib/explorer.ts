@@ -22,6 +22,20 @@ export function addressUrl(address: string): string {
   return `https://explorer.hiro.so/address/${address}?chain=${CHAIN}`;
 }
 
+/**
+ * Explorer URL for a recorded event, or null for pure lifecycle markers that
+ * carry no txid. Single source of truth so every consumer (the read API, the
+ * scripts' progress logs) links events the same way.
+ */
+export function eventUrl(event: { txid?: string }): string | null {
+  return event.txid ? txUrl(event.txid) : null;
+}
+
+/** Attach `url` to a list of recorded events (see {@link eventUrl}). */
+export function withEventUrls<T extends { txid?: string }>(events: T[]): (T & { url: string | null })[] {
+  return events.map((e) => ({ ...e, url: eventUrl(e) }));
+}
+
 /** Hiro testnet API base for programmatic status checks. */
 export const HIRO_API = "https://api.testnet.hiro.so";
 

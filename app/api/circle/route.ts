@@ -8,8 +8,8 @@
  * Read-only. Safe to call from the client.
  */
 import { NextResponse } from "next/server";
-import { addressUrl, txUrl } from "@/lib/explorer";
-import { loadCircle, type LedgerEvent } from "@/lib/ledger";
+import { addressUrl, txUrl, withEventUrls } from "@/lib/explorer";
+import { loadCircle } from "@/lib/ledger";
 import { MEMBER_PROFILES } from "@/lib/members";
 import { hasServerEnv } from "@/lib/env";
 
@@ -17,11 +17,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const DEFAULT_ID = "demo";
-
-/** Attach an explorer URL to any event that carries a txid. */
-function withUrls(events: LedgerEvent[]) {
-  return events.map((e) => ({ ...e, url: e.txid ? txUrl(e.txid) : null }));
-}
 
 /** Live, auditable read of the escrow vault (only when keys are configured). */
 async function readEscrowState() {
@@ -55,7 +50,7 @@ export async function GET(req: Request) {
     exists: true,
     circle: {
       ...state,
-      events: withUrls(state.events),
+      events: withEventUrls(state.events),
       escrow: {
         ...state.escrow,
         url: state.escrow.address ? addressUrl(state.escrow.address) : null,

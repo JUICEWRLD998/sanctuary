@@ -5,10 +5,11 @@
  * with the managed keys (senderKey mode). It never runs on the client and
  * refuses to act unless the signing keys are configured.
  *
- * Body: { action, id?, confirm? }
- *   action  create | join | runRound | runAllRounds | complete | autopilot | reset
- *   id      circle id (default "demo")
- *   confirm wait for each tx to settle before the next (default true)
+ * Body: { action, id?, confirm?, defaults? }
+ *   action   create | join | runRound | runAllRounds | complete | autopilot | reset
+ *   id       circle id (default "demo")
+ *   confirm  wait for each tx to settle before the next (default true)
+ *   defaults Phase 2 — simulate defaults: { roundIndex: [memberId, …] }
  *
  * Actions are granular so the Phase 3 UI can advance a circle round-by-round,
  * and `autopilot` runs the whole lifecycle in one call for the live demo.
@@ -43,7 +44,13 @@ type Action =
   | "reset";
 
 export async function POST(req: Request) {
-  let body: { action?: Action; id?: string; confirm?: boolean };
+  let body: {
+    action?: Action;
+    id?: string;
+    confirm?: boolean;
+    /** Phase 2 — simulate defaults: { roundIndex: [memberId, …] }. */
+    defaults?: Record<number, number[]>;
+  };
   try {
     body = await req.json();
   } catch {
@@ -52,7 +59,7 @@ export async function POST(req: Request) {
 
   const action = body.action;
   const id = body.id ?? DEFAULT_ID;
-  const opts = { confirm: body.confirm !== false };
+  const opts = { confirm: body.confirm !== false, defaults: body.defaults };
 
   if (!action) {
     return NextResponse.json({ error: "Missing 'action'." }, { status: 400 });

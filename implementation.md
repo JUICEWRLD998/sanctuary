@@ -107,11 +107,11 @@ sanctuary/
 
 ### Phase 2 — Robustness & correctness (Day 3)
 **Goal:** handle defaults and prove the math.
-- [ ] Default → escrow-compensation path.
-- [ ] Explorer-link helper wired through every recorded event.
-- [ ] **Vitest** unit tests: pot totals `(N-1)×contribution`, shortfall compensation, bond escrow/return balances.
+- [x] Default → escrow-compensation path. A member can miss a round (`runRound` honours `opts.defaults`); no funds move then. At `complete()`, after lock expiry, the escrow SPLITs each shorted recipient whole from the **defaulter's forfeited bond** (`kind: "compensation"`), and returns only the non-forfeited remainder of each bond. **Design note:** compensation settles at completion, not mid-round, because the pooled bonds are LOCKed until `endBlock` — the escrow has no movable funds until then. A guard rejects a member defaulting beyond what their bond covers (with `bond == contribution`, at most one miss), so the escrow never dips into other members' bonds and its books drain to exactly 0.
+- [x] Explorer-link helper wired through every recorded event — centralized `eventUrl`/`withEventUrls` in `lib/explorer.ts`; used by `api/circle` and the scripts' progress logs.
+- [x] **Vitest** unit tests: pot totals `(N-1)×contribution` + conservation (`circle-math`), full lifecycle (`circle-engine`), and **shortfall compensation + bond escrow/return balances** (`circle-default`: default recorded off-chain, recipient made whole, defaulter's bond forfeited, `Σ compensation + Σ bond-returns === pooled bonds`, over-default rejected). **13/13 green** (`npm test`), typecheck + lint clean.
 
-**Done when:** unit tests pass and a simulated default is compensated correctly on-chain.
+**Done when:** unit tests pass ✅ and a simulated default is compensated correctly on-chain. **On-chain sim ready** — `npm run phase2:default` runs a real testnet circle (`default-demo` id, never touches `demo`) with Chidi defaulting round 1, then asserts the on-chain compensation + zero-balance escrow. Pre-flight-gated on managed-wallet funds; **not yet executed** (spends testnet USDCx — run when ready to capture the explorer links).
 
 ### Phase 3 — Hero UI (Day 4)
 **Goal:** the circle is visible and alive.
