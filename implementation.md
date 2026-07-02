@@ -84,14 +84,14 @@ sanctuary/
 
 > Each phase has a **Goal**, **Tasks**, and a **Done when** exit check. Phases are ordered to de-risk the hardest unknown (testnet USDCx) first.
 
-### Phase 0 — De-risk & scaffold (Day 1) 🔴 highest priority
+### Phase 0 — De-risk & scaffold (Day 1) 🔴 highest priority ✅ DONE
 **Goal:** prove one real testnet tx works end-to-end before building anything.
-- [ ] Scaffold Next.js 14 + TS + Tailwind; install `flowvault-sdk @stacks/connect @stacks/transactions @stacks/network framer-motion vitest`.
-- [ ] Acquire **testnet STX** (Hiro faucet) for gas on all accounts.
-- [ ] Acquire **testnet USDCx** — faucet from FlowVault site's "Need Testnet USDCx?" section / mint on the usdcx contract / contact maintainer `yashpunmiya`.
-- [ ] Write `lib/flow.ts` wrapper; script a single managed-member `deposit` with `split→escrow` and confirm the txid on the Hiro explorer.
+- [x] Scaffold Next.js 14 + TS + Tailwind; install `flowvault-sdk @stacks/connect @stacks/transactions @stacks/network framer-motion vitest` (+ `tsx`, `dotenv` for scripts).
+- [x] Acquire **testnet STX** (Hiro faucet) for gas on all accounts — 7 managed accounts each funded with 500 STX (`scripts/setup-members.ts fund`, multi-pass to beat the IP rate limit).
+- [x] Acquire **testnet USDCx** — funded via the FlowVault dApp faucet (protocol-mint is gated; no public contract faucet). Amara/Chidi/Fatima funded 10 USDCx each.
+- [x] Write `lib/flow.ts` wrapper; script a single managed-member `deposit` with `split→escrow` and confirm the txid on the Hiro explorer (`scripts/setup-members.ts verify`).
 
-**Done when:** one real testnet split tx is confirmed on-chain with an explorer link. *(If USDCx can't be sourced, escalate immediately — this blocks everything.)*
+**Done when:** one real testnet split tx is confirmed on-chain with an explorer link. ✅ **Confirmed** — Amara→Escrow split moved 1 USDCx (Amara 10→9, Escrow 0→1). set-routing-rules `0x46fb…63b2`, deposit/split `0xc660…3579`.
 
 ### Phase 1 — Orchestration engine (Day 2)
 **Goal:** the circle runs on managed accounts.

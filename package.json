@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "setup": "tsx scripts/setup-members.ts"
+    "setup": "tsx scripts/setup-members.ts",
+    "verify:phase1": "tsx scripts/verify-phase1.ts",
+    "phase1:run": "tsx scripts/run-phase1.ts"
   },
   "dependencies": {
     "@stacks/connect": "^8.2.6",
