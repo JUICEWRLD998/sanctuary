@@ -165,33 +165,89 @@ function pickProcessEnv(): Record<string, string> {
   return out;
 }
 
-/** Fund any under-funded account with testnet STX and wait for confirmation. */
+/**
+ * Fund any under-funded account with testnet STX and wait for confirmation.
+ * The Hiro faucet is IP-rate-limited, so we make several passes, spacing
+ * requests out (FAUCET_DELAY_MS) so every account eventually gets through.
+ */
 async function fundStx(accounts: Account[]): Promise<void> {
   console.log("\n💧 Funding STX (gas)…");
-  const pending: { address: string; txid: string }[] = [];
+  const delay = Number(process.env.FAUCET_DELAY_MS ?? 45_000);
+  const maxPasses = Number(process.env.FAUCET_PASSES ?? 4);
+  const pending: { label: string; address: string; txid: string }[] = [];
 
-  for (const a of accounts) {
-    const bal = await stxBalanceMicro(a.address);
-    if (bal >= MIN_STX_MICRO) {
-      console.log(`   ✓ ${a.role.label}: already funded (${fmt(bal)} STX)`);
-      continue;
+  const needsFunding = async (addr: string) => (await stxBalanceMicro(addr)) < MIN_STX_MICRO;
+
+  let remaining = [...accounts];
+  for (let pass = 1; pass <= maxPasses && remaining.length > 0; pass++) {
+    console.log(`   — pass ${pass}/${maxPasses} (${remaining.length} account(s) to fund) —`);
+    const stillNeeds: Account[] = [];
+    for (const a of remaining) {
+      if (!(await needsFunding(a.address))) {
+        console.log(`   ✓ ${a.role.label}: funded`);
+        continue;
+      }
+      const txid = await requestStx(a.address);
+      if (txid) {
+        console.log(`   → ${a.role.label}: faucet tx ${txUrl(txid)}`);
+        pending.push({ label: a.role.label, address: a.address, txid });
+      } else {
+        console.log(`   ⚠ ${a.role.label}: faucet declined (rate-limited) — will retry`);
+        stillNeeds.push(a);
+      }
+      await sleep(delay);
     }
-    const txid = await requestStx(a.address);
-    if (txid) {
-      console.log(`   → ${a.role.label}: faucet tx ${txUrl(txid)}`);
-      pending.push({ address: a.address, txid });
-    } else {
-      console.log(`   ⚠ ${a.role.label}: faucet declined (rate-limited?) — retry later`);
-    }
-    await sleep(1500); // be gentle with the faucet
+    remaining = stillNeeds;
+  }
+
+  if (remaining.length > 0) {
+    console.log(
+      `   ⚠ ${remaining.length} account(s) still unfunded after ${maxPasses} passes. ` +
+        `Re-run \`npm run setup fund\` later (faucet limit resets over time).`
+    );
   }
 
   if (pending.length === 0) return;
   console.log("   ⏳ Waiting for faucet txs to confirm…");
   for (const p of pending) {
     const status = await waitForTx(p.txid, { timeoutMs: 300_000 });
-    console.log(`   ${status === "success" ? "✓" : "⚠"} ${p.address}: ${status}`);
+    console.log(`   ${status === "success" ? "✓" : "⚠"} ${p.label}: ${status}`);
   }
+}
+
+/**
+ * On-chain pipeline proof (no USDCx required): broadcast a real
+ * `set-routing-rules` tx from the first STX-funded account and confirm it.
+ * Proves SDK → sign → broadcast → FlowVault contract → explorer works.
+ */
+async function pipelineProof(accounts: Account[]): Promise<void> {
+  console.log("\n🧪 On-chain pipeline proof (set-routing-rules, no USDCx needed)");
+  let signer: Account | null = null;
+  for (const a of accounts) {
+    if ((await stxBalanceMicro(a.address)) >= MIN_STX_MICRO) {
+      signer = a;
+      break;
+    }
+  }
+  if (!signer) {
+    console.log("   ✗ No STX-funded account yet. Run: npm run setup fund");
+    return;
+  }
+  // Route to a different account so the split target is valid (not self).
+  const target = accounts.find((a) => a.address !== signer!.address)!;
+  console.log(`   signer: ${signer.role.label} (${signer.address})`);
+
+  const strat = await setStrategy(vaultFor(signer.key), {
+    splitAddress: target.address,
+    split: CIRCLE.contribution,
+    lock: "0",
+  });
+  console.log(`   → set-routing-rules: ${txUrl(strat.txid)}`);
+  const status = await waitForTx(strat.txid, { timeoutMs: 300_000 });
+  console.log(
+    `   ${status === "success" ? "✅" : "⚠"} set-routing-rules ${status} — ` +
+      `real FlowVault contract tx confirmed on-chain.`
+  );
 }
 
 /**
@@ -270,6 +326,8 @@ async function main() {
 
   if (step === "all" || step === "fund") await fundStx(accounts);
   if (step === "fund") return;
+
+  if (step === "pipeline") return void (await pipelineProof(accounts));
 
   if (step === "all" || step === "verify") await verifySplit(accounts);
 }
