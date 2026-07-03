@@ -2,26 +2,132 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Sanctuary — Warm Vault design tokens.
+ * See design-system/MASTER.md. Dark, WARM base (warm near-black, not cold slate).
+ * Gold is the shared anchor: reads as Bitcoin-orange, gold/value, and warmth.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --color-bg: #17120e; /* warm near-black canvas */
+  --color-surface: #211a14; /* espresso card */
+  --color-surface-2: #2b231b; /* raised / hover */
+  --color-primary: #f59e0b; /* gold — Bitcoin/value, primary CTA */
+  --color-on-primary: #1a1206; /* text/icon on gold */
+  --color-secondary: #fbbf24; /* amber highlight / gradient partner */
+  --color-accent: #c67b5c; /* clay — member/human accent */
+  --color-success: #22c55e; /* confirmed on-chain / live */
+  --color-fg: #f8f3ec; /* warm ivory */
+  --color-fg-muted: #b8aa98; /* secondary text (>=4.5:1 on bg) */
+  --color-border: #3a2f24; /* warm hairline */
+  --color-destructive: #ef4444; /* default / error */
+  --color-ring: #f59e0b; /* focus outline */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --radius-lg: 16px;
+  --radius-md: 12px;
+
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 0 1px rgba(245, 158, 11, 0.35), 0 8px 30px rgba(245, 158, 11, 0.25);
+
+  color-scheme: dark;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--color-fg);
+  background: var(--color-bg);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+  /* Tabular figures so on-chain amounts / block heights / txids never shift. */
+  .font-data {
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  /* Gold->amber wash for balances and primary CTAs only. */
+  .text-gradient-gold {
+    background: linear-gradient(100deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .bg-gradient-gold {
+    background: linear-gradient(100deg, var(--color-primary), var(--color-secondary));
+  }
+  /* Warm radial glow behind the avatar ring. */
+  .bg-vault-glow {
+    background: radial-gradient(
+      60% 60% at 50% 42%,
+      rgba(245, 158, 11, 0.12),
+      rgba(23, 18, 14, 0) 70%
+    );
+  }
+}
+
+/* Pulsing "live" indicator (green dot / active recipient). */
+@keyframes sanctuary-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+}
+.animate-live-pulse {
+  animation: sanctuary-pulse 1.6s ease-in-out infinite;
+}
+
+/* Skeleton shimmer for the live circle while api/circle loads. */
+@keyframes sanctuary-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  animation: sanctuary-shimmer 1.5s infinite;
+}
+
+/* Accessibility: honor reduced-motion — kill decorative motion, keep content readable. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
