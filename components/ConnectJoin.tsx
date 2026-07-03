@@ -42,6 +42,16 @@ function short(addr: string): string {
 }
 
 /**
+ * Stacks encodes the network in the address prefix: testnet is `ST…`/`SN…`,
+ * mainnet is `SP…`/`SM…`. The demo (and its USDCx) live on testnet, so a wallet
+ * left on mainnet must switch before it can join — otherwise the testnet balance
+ * read finds nothing and the signature would target the wrong network.
+ */
+function isTestnetAddress(addr: string): boolean {
+  return addr.startsWith("ST") || addr.startsWith("SN");
+}
+
+/**
  * Wallet-mode join: a judge connects their own wallet and posts a real bond into
  * the Sanctuary escrow — set routing rule (split → escrow), then deposit, both
  * signed in their wallet. Two signatures, with a confirmation wait between them
@@ -94,7 +104,7 @@ export function ConnectJoin({ escrowAddress, escrowName, bond }: ConnectJoinProp
   }
 
   async function onJoin() {
-    if (!address || !escrowAddress) return;
+    if (!address || !escrowAddress || !isTestnetAddress(address)) return;
     setError(null);
     setRuleTx(null);
     setDepositTx(null);
@@ -133,7 +143,8 @@ export function ConnectJoin({ escrowAddress, escrowName, bond }: ConnectJoinProp
   }
 
   const busy = BUSY.includes(step);
-  const insufficient = balance != null && balance < Number(bond);
+  const wrongNetwork = address != null && !isTestnetAddress(address);
+  const insufficient = !wrongNetwork && balance != null && balance < Number(bond);
 
   return (
     <div className="rounded-lg border border-border bg-surface p-4">
@@ -161,7 +172,11 @@ export function ConnectJoin({ escrowAddress, escrowName, bond }: ConnectJoinProp
             <div className="min-w-0">
               <p className="font-data text-xs text-fg">{short(address)}</p>
               <p className="text-[11px] text-fg-muted">
-                {balance == null ? "balance —" : `${balance} USDCx available`}
+                {wrongNetwork
+                  ? "on mainnet — switch to testnet"
+                  : balance == null
+                    ? "balance —"
+                    : `${balance} USDCx available`}
               </p>
             </div>
             <button
@@ -176,18 +191,28 @@ export function ConnectJoin({ escrowAddress, escrowName, bond }: ConnectJoinProp
             </button>
           </div>
 
-          {insufficient && step !== "done" && (
+          {wrongNetwork ? (
             <p className="flex items-start gap-1.5 text-xs text-fg-muted">
               <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" aria-hidden="true" />
-              You need at least {bond} USDCx on testnet to join. USDCx is protocol-mint-gated — fund
-              this wallet via the FlowVault dApp faucet first.
+              This wallet is on <span className="font-medium text-fg">mainnet</span> ({short(address)}).
+              Sanctuary runs on Stacks testnet — switch your wallet to Testnet, then reconnect. Your
+              address will start with <span className="font-data">ST…</span>; fund that one with USDCx.
             </p>
+          ) : (
+            insufficient &&
+            step !== "done" && (
+              <p className="flex items-start gap-1.5 text-xs text-fg-muted">
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" aria-hidden="true" />
+                You need at least {bond} USDCx on testnet to join. USDCx is protocol-mint-gated — fund
+                this wallet via the FlowVault dApp faucet first.
+              </p>
+            )
           )}
 
           <button
             type="button"
             onClick={onJoin}
-            disabled={busy || insufficient || !escrowAddress}
+            disabled={busy || wrongNetwork || insufficient || !escrowAddress}
             className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-gradient-gold px-4 py-2 text-sm font-medium text-primary-fg shadow-glow transition-transform duration-200 hover:enabled:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             aria-live="polite"
           >
