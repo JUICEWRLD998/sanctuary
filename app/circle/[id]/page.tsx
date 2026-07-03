@@ -169,6 +169,12 @@ function CircleBody({
       <aside className="flex flex-col gap-6">
         <BitcoinBadge variant="full" />
 
+        <ConnectJoin
+          escrowAddress={circle.escrow.address}
+          escrowName="the Sanctuary escrow"
+          bond={circle.bond}
+        />
+
         <EscrowProof circle={circle} />
 
         <div>
