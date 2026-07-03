@@ -9,6 +9,7 @@ import { MemberCard } from "@/components/MemberCard";
 import { RoundTimeline } from "@/components/RoundTimeline";
 import { AutopilotButton } from "@/components/AutopilotButton";
 import { BitcoinBadge } from "@/components/BitcoinBadge";
+import { ConnectJoin } from "@/components/ConnectJoin";
 import { ExplorerLink } from "@/components/ExplorerLink";
 import { STORY } from "@/content/story";
 
