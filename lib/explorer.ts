@@ -3,6 +3,7 @@
  * as an auditable explorer link, satisfying the bounty's "auditable via explorer
  * links" requirement.
  */
+import { FLOWVAULT } from "./constants";
 
 const CHAIN = "testnet";
 
@@ -38,6 +39,32 @@ export function withEventUrls<T extends { txid?: string }>(events: T[]): (T & { 
 
 /** Hiro testnet API base for programmatic status checks. */
 export const HIRO_API = "https://api.testnet.hiro.so";
+
+/**
+ * Read an address's spendable USDCx balance (whole USDCx, as a string) from the
+ * public Hiro API. No signing keys required, so it works even where the
+ * orchestrator env is absent — used to surface bonds that have *landed* at the
+ * escrow principal (e.g. a judge's wallet-mode join) before they're deposited
+ * and LOCKed into the escrow's vault. Returns "0" on any error.
+ */
+export async function fetchAddressUsdcx(address: string): Promise<string> {
+  try {
+    const res = await fetch(`${HIRO_API}/extended/v1/address/${address}/balances`);
+    if (!res.ok) return "0";
+    const data = (await res.json()) as {
+      fungible_tokens?: Record<string, { balance?: string }>;
+    };
+    const prefix = `${FLOWVAULT.tokenContractAddress}.${FLOWVAULT.tokenContractName}::`;
+    for (const [assetId, info] of Object.entries(data.fungible_tokens ?? {})) {
+      if (assetId.startsWith(prefix)) {
+        return String(Number(info.balance ?? "0") / 1_000_000); // USDCx: 6 decimals
+      }
+    }
+    return "0";
+  } catch {
+    return "0";
+  }
+}
 
 export type TxStatus =
   | "pending"

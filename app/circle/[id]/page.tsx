@@ -220,6 +220,13 @@ function EscrowProof({ circle }: { circle: CircleView }) {
           Live vault read is available when the orchestrator keys are configured.
         </p>
       )}
+
+      {circle.escrow.held != null && (
+        <div className="mt-3 flex items-center justify-between gap-2 rounded-md bg-surface-2 px-3 py-2">
+          <dt className="text-[10px] uppercase tracking-wide text-fg-muted">USDCx held at escrow</dt>
+          <dd className="font-data text-sm text-fg">{circle.escrow.held}</dd>
+        </div>
+      )}
       {circle.escrow.bondLockUrl && (
         <p className="mt-3 text-xs text-fg-muted">
           Bond lock:{" "}

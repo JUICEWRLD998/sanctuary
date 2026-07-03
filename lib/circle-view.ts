@@ -28,6 +28,8 @@ export interface CircleView extends Omit<CircleState, "events" | "escrow"> {
     bondLockTxid: string | null;
     url: string | null;
     live: EscrowLive | null;
+    /** Raw USDCx held at the escrow principal (whole USDCx), public read. */
+    held: string | null;
     bondLockUrl: string | null;
   };
 }

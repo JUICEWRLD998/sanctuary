@@ -8,7 +8,7 @@
  * Read-only. Safe to call from the client.
  */
 import { NextResponse } from "next/server";
-import { addressUrl, txUrl, withEventUrls } from "@/lib/explorer";
+import { addressUrl, fetchAddressUsdcx, txUrl, withEventUrls } from "@/lib/explorer";
 import { loadCircle } from "@/lib/ledger";
 import { MEMBER_PROFILES } from "@/lib/members";
 import { hasServerEnv } from "@/lib/env";
@@ -44,7 +44,12 @@ export async function GET(req: Request) {
     );
   }
 
-  const escrowLive = await readEscrowState();
+  // Live vault read needs keys; the raw held-token balance is a public read, so
+  // a judge's fresh wallet-join bond shows up even without the orchestrator env.
+  const [escrowLive, escrowHeld] = await Promise.all([
+    readEscrowState(),
+    state.escrow.address ? fetchAddressUsdcx(state.escrow.address) : Promise.resolve(null),
+  ]);
 
   return NextResponse.json({
     exists: true,
@@ -55,6 +60,7 @@ export async function GET(req: Request) {
         ...state.escrow,
         url: state.escrow.address ? addressUrl(state.escrow.address) : null,
         live: escrowLive,
+        held: escrowHeld,
         bondLockUrl: state.escrow.bondLockTxid ? txUrl(state.escrow.bondLockTxid) : null,
       },
     },
