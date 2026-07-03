@@ -2,7 +2,10 @@ export type StreakStatus = "paid" | "missed" | "recipient" | "pending";
 
 const SEGMENT_STYLE: Record<StreakStatus, string> = {
   paid: "bg-success",
-  missed: "bg-destructive",
+  // Diagonal stripes make "missed" distinguishable from "paid" by shape, not
+  // color alone (colorblind-safe).
+  missed:
+    "bg-destructive bg-[image:repeating-linear-gradient(45deg,rgba(0,0,0,0.35)_0,rgba(0,0,0,0.35)_2px,transparent_2px,transparent_4px)]",
   recipient: "bg-gradient-gold",
   pending: "bg-surface-2 border border-border",
 };
@@ -40,14 +43,8 @@ export function StreakBar({ segments, name }: StreakBarProps) {
         <span
           key={i}
           title={`Round ${i + 1} — ${SEGMENT_LABEL[status]}`}
-          className={`relative h-2 flex-1 overflow-hidden rounded-full ${SEGMENT_STYLE[status]}`}
-        >
-          {status === "missed" && (
-            <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold leading-none text-white/90">
-              ✕
-            </span>
-          )}
-        </span>
+          className={`h-2 flex-1 rounded-full ${SEGMENT_STYLE[status]}`}
+        />
       ))}
     </div>
   );

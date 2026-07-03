@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { Check, Lock } from "lucide-react";
 import type { CirclePhase, MemberProfile } from "@/lib/circle-view";
 import { Avatar } from "./Avatar";
 
@@ -114,7 +115,10 @@ export function CircleRing({
         <p className="mt-1 font-data text-2xl font-medium text-gradient-gold sm:text-3xl">{pot}</p>
         <p className="-mt-0.5 text-[11px] uppercase tracking-wide text-fg-muted">USDCx pot</p>
         {blocksLeft != null && blocksLeft > 0 && (
-          <p className="mt-2 font-data text-[11px] text-fg-muted">🔒 {blocksLeft} blocks</p>
+          <p className="mt-2 inline-flex items-center gap-1 font-data text-[11px] text-fg-muted">
+            <Lock className="h-3 w-3" aria-hidden="true" />
+            {blocksLeft} blocks
+          </p>
         )}
       </div>
 
@@ -134,10 +138,10 @@ export function CircleRing({
               active={m.id === recipientId}
               muted={defaultedIds.includes(m.id) && m.id !== recipientId}
             />
-            <span className="mt-1 max-w-[7rem] truncate text-xs font-medium text-fg">
-              {m.name}
+            <span className="mt-1 inline-flex max-w-[7rem] items-center gap-0.5 text-xs font-medium text-fg">
+              <span className="truncate">{m.name}</span>
               {paidOutIds.includes(m.id) && m.id !== recipientId && (
-                <span className="text-success"> ✓</span>
+                <Check className="h-3 w-3 shrink-0 text-success" aria-label="received their pot" />
               )}
             </span>
           </div>

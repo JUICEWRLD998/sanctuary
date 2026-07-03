@@ -113,12 +113,14 @@ sanctuary/
 
 **Done when:** unit tests pass ✅ and a simulated default is compensated correctly on-chain. ✅ **VERIFIED LIVE** — `npm run phase2:default` ran a real testnet circle (`default-demo`, never touched `demo`) with Chidi defaulting round 1. All 9 assertions green: one default recorded, defaulted round short one contribution, escrow made Amara whole (compensation SPLIT 1 USDCx, tx `0x81ad0f…d985`), Chidi forfeited their bond (no return), Amara & Fatima bonds returned, **escrow books balanced to zero** (Σ compensation + Σ bond-returns === 3 pooled bonds), `phase = complete`. Live escrow read confirmed drained: total=0 locked=0 unlocked=0. Escrow reclaim tx `0xcd2b98…6b84`.
 
-### Phase 3 — Hero UI (Day 4)
+### Phase 3 — Hero UI (Day 4) ✅ DONE
 **Goal:** the circle is visible and alive.
-- [ ] `CircleRing` (animated 6-avatar ring + pot flow), `RoundTimeline` (rounds + live tx links), `MemberCard` / `StreakBar` / `BitcoinBadge`.
-- [ ] Wire to live state from `api/circle`; add an autopilot trigger button.
+- [x] `CircleRing` (avatar ring + SVG pot-flow to the current recipient, reduced-motion aware), `RoundTimeline` (vertical ledger with live explorer links per event), `MemberCard` / `StreakBar` (colorblind-safe: shape + aria, not color-only) / `BitcoinBadge`. Plus `Avatar`, `ExplorerLink`, `AutopilotButton`, and `event-meta`.
+- [x] `app/circle/[id]/page.tsx` wired to `api/circle` (skeleton while loading, 15s poll while active, live escrow-vault proof panel); autopilot trigger button POSTs `api/orchestrator`. Root `app/page.tsx` now routes into the demo circle (full landing is Phase 5).
 
-**Done when:** watching the hero screen, a judge sees rounds advance with the pot flowing and clickable explorer links.
+**Design system:** established **Warm Vault** direction (dark warm base + gold Bitcoin/value anchor + clay member accent + green confirmed-on-chain) via the ui-ux-pro-max skill; persisted to `design-system/MASTER.md`. Foundation: Warm Vault tokens in `globals.css`, semantic Tailwind tokens, Space Grotesk / Inter / JetBrains Mono (tabular figures for on-chain data), `lucide-react` icons (no emoji-as-icons).
+
+**Done when:** watching the hero screen, a judge sees rounds advance with the pot flowing and clickable explorer links. ✅ Renders live from the `demo` ledger; running the autopilot button advances rounds with the pot animating to each recipient and every event linking to Hiro. Verified: `tsc` clean, `next lint` clean, `next build` passes (both routes compile), dev smoke-test GET /circle/demo + / → 200.
 
 ### Phase 4 — Wallet-mode join (Day 5)
 **Goal:** a judge can do a real tx themselves.
