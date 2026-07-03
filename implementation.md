@@ -144,7 +144,7 @@ sanctuary/
 **Goal:** everything the bounty requires.
 - [ ] Seed a real **completed** circle on testnet (historical txs) + a pre-seeded live round.
 - [ ] Record ≤3-min demo video.
-- [ ] Write `README.md`, `INTEGRATION.md` (FlowVault integration explanation), `FLOWVAULT_FEEDBACK.md`; collect all testnet tx explorer links.
+- [x] Write `README.md`, `INTEGRATION.md` (FlowVault integration explanation), `FLOWVAULT_FEEDBACK.md`; collect all testnet tx explorer links. **Also added `SECURITY.md`.** These four are the **Builder Award** artifacts (outstanding SDK use · documentation · security · feedback): `FLOWVAULT_FEEDBACK.md` (8 concrete SDK gaps with impact + proposals, plus a native Clarity `circle-escrow` interface proposal), `INTEGRATION.md` (all 3 primitives mapped to code, both signer modes, real tx links), `SECURITY.md` (trust model, key custody, tested invariants, no-double-spend-on-retry boundary), and a real `README.md` replacing the Next.js boilerplate. All cross-linked; real testnet txids pulled from `data/circles/demo.json`.
 
 **Done when:** public repo, demo URL, video, integration explanation, and ≥1 auditable testnet tx are all ready.
 
