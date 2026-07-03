@@ -11,7 +11,8 @@ import { AutopilotButton } from "@/components/AutopilotButton";
 import { BitcoinBadge } from "@/components/BitcoinBadge";
 import { ConnectJoin } from "@/components/ConnectJoin";
 import { ExplorerLink } from "@/components/ExplorerLink";
-import { STORY } from "@/content/story";
+import { OutcomeReveal } from "@/components/OutcomeReveal";
+import { OUTCOMES, STORY } from "@/content/story";
 
 /** Per-member round history, derived from the circle's rounds. */
 function streakFor(member: MemberProfile, circle: CircleView): StreakStatus[] {
@@ -126,6 +127,20 @@ function CircleBody({
   const blocksLeft =
     live?.currentBlock != null && circle.endBlock != null ? circle.endBlock - live.currentBlock : null;
 
+  // The most recently landed pot → the "outcome reveal" (implementation.md §5).
+  // While active, that's the recipient of the last settled round; once complete,
+  // the final recipient in the payout order.
+  const landedIndex =
+    circle.phase === "complete"
+      ? circle.payoutOrder.length - 1
+      : circle.currentRound - 1;
+  const landedId = landedIndex >= 0 ? circle.payoutOrder[landedIndex] : null;
+  const landedMember = landedId != null ? members.find((m) => m.id === landedId) : null;
+  const landed =
+    landedMember != null
+      ? { id: landedMember.id, name: landedMember.name, outcome: OUTCOMES[landedMember.name] ?? `${landedMember.name}'s pot has landed.` }
+      : null;
+
   return (
     <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
       {/* Left: hero ring + members */}
@@ -141,6 +156,8 @@ function CircleBody({
           phase={circle.phase}
           blocksLeft={blocksLeft}
         />
+
+        {landed && <OutcomeReveal recipient={landed} pot={pot} complete={circle.phase === "complete"} />}
 
         <div>
           <AutopilotButton circleId={id} onComplete={onRefetchNeeded} />

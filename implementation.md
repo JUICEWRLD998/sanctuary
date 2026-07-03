@@ -130,11 +130,15 @@ sanctuary/
 
 **Done when:** connecting a real wallet and joining a round produces a confirmed testnet tx. ✅ **Code complete & verified building** — `tsc` clean, `next lint` clean, `next build` passes (`/circle/[id]` compiles with the wallet bundle), dev smoke-test GET /circle/demo + / → 200. The final on-chain confirmation is a **manual browser step** (needs a Leather/Xverse wallet holding ≥1 USDCx on testnet — USDCx is protocol-mint-gated) and cannot be exercised headlessly; the flow reuses the identical `createStrategy`+`deposit` path already confirmed live on-chain in Phases 0–2.
 
-### Phase 5 — Emotion & polish (Day 6)
+### Phase 5 — Emotion & polish (Day 6) ✅ DONE
 **Goal:** make judges *feel* it.
-- [ ] `content/story.ts` human narratives; landing page; Framer Motion polish; Bitcoin-finality framing; outcome reveal when a pot lands.
+- [x] `content/story.ts` human narratives — hero copy, per-member outcome lines (`OUTCOMES`), the three-step `HOW_IT_WORKS` explainer (each mapped to a FlowVault primitive), the demo `PEOPLE`, and the ecosystem `CLOSING` framing. Client-safe (no key material).
+- [x] Full **landing page** (`app/page.tsx`) — story-driven, following the Warm Vault "Community/Forum Landing" pattern: hero → how-a-circle-works → the three real people (avatar + reason + outcome) → Bitcoin-finality proof panel → "why it matters" closing → CTA into the live hero. One primary CTA per screen (gold gradient + glow), aria-labelled sections, 44px targets.
+- [x] **Framer Motion polish** — `components/Reveal.tsx`, a scroll-in wrapper (transform/opacity only, ≤400ms ease-out, 30–50ms stagger) that renders statically under `prefers-reduced-motion`.
+- [x] **Outcome reveal when a pot lands** — `components/OutcomeReveal.tsx` shows *what the pot meant* for the recipient (spring-in, keyed per recipient, reduced-motion aware), wired into `app/circle/[id]/page.tsx` below the ring: derives the last-landed recipient from `currentRound`/`phase` and pulls their line from `OUTCOMES`.
+- [x] **Bitcoin-finality framing** — dedicated proof panel on the landing (ShieldCheck + `STORY.proof`) reinforcing the existing `BitcoinBadge`.
 
-**Done when:** the landing + hero tell a coherent, moving story end-to-end.
+**Done when:** the landing + hero tell a coherent, moving story end-to-end. ✅ Landing renders the full narrative and routes into the live hero; the hero now reveals each recipient's human outcome as their pot lands. Verified: `tsc` clean, `next lint` clean, `next build` passes (`/` 9.16 kB static, `/circle/[id]` compiles), dev smoke-test GET / + /circle/demo → 200.
 
 ### Phase 6 — Proof & submission assets (Day 7)
 **Goal:** everything the bounty requires.
