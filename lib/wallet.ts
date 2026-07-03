@@ -11,7 +11,7 @@
  * bond atomically routes into the app-run escrow, as a real testnet transaction.
  */
 import { connect, disconnect, getLocalStorage, request } from "@stacks/connect";
-import { PostConditionMode } from "@stacks/transactions";
+import { PostConditionMode, postConditionToHex, serializeCV } from "@stacks/transactions";
 import { FlowVault, tokenToMicro, type ContractCallRequest } from "flowvault-sdk";
 import { FLOWVAULT, NETWORK } from "./constants";
 import { HIRO_API } from "./explorer";
@@ -50,12 +50,18 @@ function modeName(mode: ContractCallRequest["postConditionMode"]): "allow" | "de
 export function walletVault(senderAddress: string): FlowVault {
   const executor = async (req: ContractCallRequest) => {
     // Bridge the SDK's generic request onto @stacks/connect's stx_callContract.
+    // Serialize Clarity args and post-conditions to hex first: the SDK hands us
+    // ClarityValue/PostCondition *objects* whose uint amounts are BigInt, which
+    // don't survive the JSON-RPC hop to the wallet (surfacing as a generic
+    // "Internal error"). Hex strings are the canonical, JSON-safe wire form that
+    // @stacks/connect and the wallets accept (functionArgs/postConditions both
+    // take `string[]`).
     return request("stx_callContract", {
       contract: `${req.contractAddress}.${req.contractName}`,
       functionName: req.functionName,
-      functionArgs: req.functionArgs,
+      functionArgs: req.functionArgs.map((arg) => serializeCV(arg)),
       network: req.network,
-      postConditions: req.postConditions,
+      postConditions: (req.postConditions ?? []).map((pc) => postConditionToHex(pc)),
       postConditionMode: modeName(req.postConditionMode),
     });
   };
