@@ -122,11 +122,13 @@ sanctuary/
 
 **Done when:** watching the hero screen, a judge sees rounds advance with the pot flowing and clickable explorer links. ✅ Renders live from the `demo` ledger; running the autopilot button advances rounds with the pot animating to each recipient and every event linking to Hiro. Verified: `tsc` clean, `next lint` clean, `next build` passes (both routes compile), dev smoke-test GET /circle/demo + / → 200.
 
-### Phase 4 — Wallet-mode join (Day 5)
+### Phase 4 — Wallet-mode join (Day 5) ✅ DONE
 **Goal:** a judge can do a real tx themselves.
-- [ ] `ConnectJoin` using `@stacks/connect` `contractCallExecutor`: "Join Round" sets routing rule (split→recipient) then deposit, signed in the judge's wallet.
+- [x] `lib/wallet.ts` — client-only bridge from the SDK's `contractCallExecutor` mode onto `@stacks/connect` v8 (`request('stx_callContract', …)`): connect/disconnect + session restore, `walletVault()` (a FlowVault bound to the connected wallet), `setJoinStrategy` (SPLIT → escrow) / `depositJoin`, and a spendable-USDCx balance read off the Hiro API. Amount + post-condition conventions mirror `lib/flow.ts` exactly (whole USDCx → `tokenToMicro`), so the judge signs the *same* split-then-deposit move the managed engine makes.
+- [x] `components/ConnectJoin.tsx` — the join UI: connect wallet → shows address + USDCx balance (guards insufficient-balance with the protocol-mint-gated faucet note) → **two signatures** with a confirmation wait between them (FlowVault applies a principal's rule on its *next* deposit): sign routing rule → `waitForTx` → sign deposit → `waitForTx`. Both txs render as live Hiro explorer links; reduced-motion/aria/44px-touch-target compliant like the Phase 3 components.
+- [x] Wired into `app/circle/[id]/page.tsx` sidebar, fed `circle.escrow.address` + `circle.bond` from the read API.
 
-**Done when:** connecting a real wallet and joining a round produces a confirmed testnet tx.
+**Done when:** connecting a real wallet and joining a round produces a confirmed testnet tx. ✅ **Code complete & verified building** — `tsc` clean, `next lint` clean, `next build` passes (`/circle/[id]` compiles with the wallet bundle), dev smoke-test GET /circle/demo + / → 200. The final on-chain confirmation is a **manual browser step** (needs a Leather/Xverse wallet holding ≥1 USDCx on testnet — USDCx is protocol-mint-gated) and cannot be exercised headlessly; the flow reuses the identical `createStrategy`+`deposit` path already confirmed live on-chain in Phases 0–2.
 
 ### Phase 5 — Emotion & polish (Day 6)
 **Goal:** make judges *feel* it.
