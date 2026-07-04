@@ -143,7 +143,7 @@ sanctuary/
 ### Phase 6 — Proof & submission assets (Day 7)
 **Goal:** everything the bounty requires.
 - [ ] Seed a real **completed** circle on testnet (historical txs) + a pre-seeded live round.
-- [ ] Record ≤3-min demo video.
+- [x] **Demo video script written** ([`script.md`](./script.md)) — a beat-by-beat ≤3-min script (hook → how-it-works → architecture → live 17-tx circle walkthrough → default handling → wallet-join → close) with on-screen cues, the real circle facts to keep accurate, and the "don'ts" (trust-**minimized** not trustless, no key material on camera). *Recording + published video URL to follow — the script is the reusable artifact; the walkthrough runs against the already-seeded `demo` circle.*
 - [x] Write `README.md`, `INTEGRATION.md` (FlowVault integration explanation), `FLOWVAULT_FEEDBACK.md`; collect all testnet tx explorer links. **Also added `SECURITY.md`.** These four are the **Builder Award** artifacts (outstanding SDK use · documentation · security · feedback): `FLOWVAULT_FEEDBACK.md` (8 concrete SDK gaps with impact + proposals, plus a native Clarity `circle-escrow` interface proposal), `INTEGRATION.md` (all 3 primitives mapped to code, both signer modes, real tx links), `SECURITY.md` (trust model, key custody, tested invariants, no-double-spend-on-retry boundary), and a real `README.md` replacing the Next.js boilerplate. All cross-linked; real testnet txids pulled from `data/circles/demo.json`.
 
 **Done when:** public repo, demo URL, video, integration explanation, and ≥1 auditable testnet tx are all ready.
