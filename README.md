@@ -68,9 +68,15 @@ cp .env.example .env.local   # fill with TESTNET keys only (see below)
 npm run dev                  # http://localhost:3000
 ```
 
-- `/` — the story landing.
-- `/circle/demo` — the live hero. "Run the circle live" drives the full lifecycle on testnet
-  (needs managed keys configured; takes a few minutes as it waits on block confirmations).
+- `/` — the story landing. "Watch the circle live" links into the completed circle below.
+- `/circle/demo` — a **completed** circle: a full 3-member lifecycle (14 real testnet txs)
+  you can click through to the Hiro explorer. Nothing to run — it already happened.
+- `/circle/live` — a **mid-flight** circle: round 1 settled, rounds 2–3 pending, escrow read
+  live. The "Run the circle live" button here advances the remaining rounds on testnet
+  (needs managed keys; takes a few minutes as it waits on block confirmations).
+
+> New here? **[DEMO.md](./DEMO.md)** explains exactly what each "live" surface does and gives
+> a click-by-click demo runbook — start there.
 
 ### Environment (testnet only)
 
@@ -127,6 +133,8 @@ a native Clarity `circle-escrow` extension that would make circles fully trustle
 
 ## Docs
 
+- **[DEMO.md](./DEMO.md)** — what's real vs. orchestrated, the three "live" surfaces, and a demo runbook.
+- **[script.md](./script.md)** — the ≤3-minute spoken demo-video script.
 - **[INTEGRATION.md](./INTEGRATION.md)** — how the SDK is used, primitive-by-primitive, with code.
 - **[FLOWVAULT_FEEDBACK.md](./FLOWVAULT_FEEDBACK.md)** — SDK gaps, workarounds, and a Clarity proposal.
 - **[SECURITY.md](./SECURITY.md)** — trust model, key custody, invariants.

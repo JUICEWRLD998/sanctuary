@@ -55,7 +55,7 @@ recipient, and the RoundTimeline. Click into one or two explorer links as you na
 > rounds fire: round one, everyone contributes and the whole pot lands on Amara — her
 > school fees, paid. Round two rotates to Chidi. Round three to Fatima. When the lock
 > expires the escrow reclaims and returns every bond, and the books drain to exactly zero.
-> That's **seventeen real transactions** — every one of them a clickable, auditable link."
+> That's **fourteen real on-chain transactions** — every one of them a clickable, auditable link."
 
 **Tip:** pause on the "escrow vault drained to 0" proof panel — say *"you can verify the
 escrow holds nothing at the end — no funds left our hands."*
@@ -99,8 +99,10 @@ escrow holds nothing at the end — no funds left our hands."*
 
 - **Live circle:** 3 members — Amara, Chidi, Fatima — `contribution = 1 USDCx`, `bond = 1 USDCx`,
   payout order Amara → Chidi → Fatima.
-- **17 real testnet transactions** in the completed `demo` circle (3 bonds → escrow lock →
-  3 rounds / 6 contributions / 3 payouts → escrow reclaim → 3 bond returns).
+- **14 real on-chain transactions** in the completed `demo` circle (3 bonds → escrow lock →
+  6 contributions → escrow reclaim → 3 bond returns). The 3 "payout" entries in the ledger
+  (17 events total) are aggregate markers — the pot landing *is* the sum of that round's
+  contributions, so they carry no separate txid.
 - **All three FlowVault primitives** used: Lock (escrow bond lock), Split (bond → escrow,
   rotating payouts, compensation, bond return), Hold (liquid contribution buffers).
 - **Everything is testnet**, anchored to Bitcoin via Stacks; explorer base
