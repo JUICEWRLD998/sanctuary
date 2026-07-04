@@ -13,7 +13,8 @@
     "setup": "tsx scripts/setup-members.ts",
     "verify:phase1": "tsx scripts/verify-phase1.ts",
     "phase1:run": "tsx scripts/run-phase1.ts",
-    "phase2:default": "tsx scripts/simulate-default.ts"
+    "phase2:default": "tsx scripts/simulate-default.ts",
+    "seed:live": "tsx scripts/seed-live.ts"
   },
   "dependencies": {
     "@stacks/connect": "^8.2.6",

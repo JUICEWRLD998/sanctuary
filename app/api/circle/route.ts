@@ -15,6 +15,11 @@ import { hasServerEnv } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// The escrow/vault reads below hit the chain through the SDK's patched `fetch`.
+// Next's App Router persists a Data Cache to disk, which would otherwise serve a
+// STALE vault read (e.g. an empty escrow captured before a circle was seeded).
+// Force every fetch in this route to bypass that cache so the proof panel is live.
+export const fetchCache = "force-no-store";
 
 const DEFAULT_ID = "demo";
 
@@ -44,12 +49,22 @@ export async function GET(req: Request) {
     );
   }
 
-  // Live vault read needs keys; the raw held-token balance is a public read, so
-  // a judge's fresh wallet-join bond shows up even without the orchestrator env.
-  const [escrowLive, escrowHeld] = await Promise.all([
-    readEscrowState(),
-    state.escrow.address ? fetchAddressUsdcx(state.escrow.address) : Promise.resolve(null),
-  ]);
+  // The escrow is a single shared managed principal, so a *live* read reflects
+  // whatever circle is running now. A completed circle instead serves the
+  // snapshot of its OWN final escrow state (captured at completion, drained to
+  // 0) so a later live circle's balance never leaks onto it. Active/forming
+  // circles read live — the raw held-token balance is a public read, so a
+  // judge's fresh wallet-join bond shows up even without the orchestrator env.
+  const snapshot = state.phase === "complete" ? state.escrow.snapshot ?? null : null;
+  const [escrowLive, escrowHeld] = snapshot
+    ? [
+        { ...snapshot, url: state.escrow.address ? addressUrl(state.escrow.address) : null },
+        snapshot.total,
+      ]
+    : await Promise.all([
+        readEscrowState(),
+        state.escrow.address ? fetchAddressUsdcx(state.escrow.address) : Promise.resolve(null),
+      ]);
 
   return NextResponse.json({
     exists: true,

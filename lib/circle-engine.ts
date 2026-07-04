@@ -26,7 +26,7 @@
  */
 import { CIRCLE } from "./constants";
 import { waitForTx } from "./explorer";
-import { currentBlock, deposit, setStrategy, withdraw, type Strategy } from "./flow";
+import { currentBlock, deposit, readState, setStrategy, withdraw, type Strategy } from "./flow";
 import { getCircleActors, type Actor, type EscrowActor } from "./members";
 import {
   appendEvent,
@@ -425,6 +425,17 @@ export async function complete(id: string, opts: RunOptions = {}): Promise<Circl
       txid,
     });
     await saveCircle(state);
+  }
+
+  // Capture the escrow's final vault state so the read API can render this
+  // completed circle's OWN escrow numbers (drained to 0) rather than a live
+  // read of the shared escrow principal, which would leak a later circle's
+  // balance. Best-effort: a read failure just leaves the API to fall back.
+  try {
+    const s = await readState(escrow.vault, escrow.address);
+    state.escrow.snapshot = { ...s, at: new Date().toISOString() };
+  } catch {
+    /* non-fatal — API falls back to a live read if no snapshot is stored */
   }
 
   state.phase = "complete";

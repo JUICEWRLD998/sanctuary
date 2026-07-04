@@ -45,6 +45,24 @@ export interface LedgerEvent {
   at: string;
 }
 
+/**
+ * A captured read of the escrow vault at a lifecycle milestone. The escrow is a
+ * single shared managed principal, so a *live* read of it reflects whatever
+ * circle happens to be running right now. A completed circle therefore renders
+ * this snapshot of its OWN final state (drained to 0 once every bond is
+ * returned) instead of leaking a later circle's live balance. Shape mirrors
+ * lib/flow `VaultState` (+ `at`) so the UI can consume it unchanged.
+ */
+export interface EscrowSnapshot {
+  total: string;
+  locked: string;
+  unlocked: string;
+  lockUntilBlock: number;
+  currentBlock: number;
+  /** ISO timestamp of the read. */
+  at: string;
+}
+
 /** Per-round progress and its resulting pot. */
 export interface RoundRecord {
   index: number;
@@ -88,6 +106,13 @@ export interface CircleState {
     address: string | null;
     /** txid of the escrow's bond-lock deposit. */
     bondLockTxid: string | null;
+    /**
+     * Final escrow-vault read captured at {@link complete}. Optional so older
+     * ledger files (and in-flight circles) load unchanged; when present it is
+     * what the read API serves for completed circles instead of a live read of
+     * the shared escrow principal.
+     */
+    snapshot?: EscrowSnapshot | null;
   };
   rounds: RoundRecord[];
   events: LedgerEvent[];
