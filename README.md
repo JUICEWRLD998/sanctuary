@@ -68,6 +68,8 @@ cp .env.example .env.local   # fill with TESTNET keys only (see below)
 npm run dev                  # http://localhost:3000
 ```
 
+- `/create` — **start your own real circle.** Set the size, contribution, and bond; then real
+  members join with their own wallets and fund upfront. See "Open circles" in **[DEMO.md](./DEMO.md)**.
 - `/` — the story landing. "Watch the circle live" links into the completed circle below.
 - `/circle/demo` — a **completed** circle: a full 3-member lifecycle (14 real testnet txs)
   you can click through to the Hiro explorer. Nothing to run — it already happened.

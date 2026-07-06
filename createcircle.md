@@ -26,13 +26,28 @@
 
 ## Progress checklist
 
-- [ ] **1. Data model** — `lib/ledger.ts`
-- [ ] **2. Engine** — `lib/open-circle.ts` (new; demo `circle-engine.ts` untouched)
-- [ ] **3. Client funding** — `lib/wallet.ts`
-- [ ] **4. API routes** — `/api/open/create`, `/api/open/join`, `/api/open/advance`; tweak `/api/circle`
-- [ ] **5. UI** — `app/create/page.tsx`, `components/LobbyJoin.tsx`, `app/circle/[id]/page.tsx`, landing link
-- [ ] **6. Tests** — `tests/open-circle.test.ts`
-- [ ] **7. Docs** — `DEMO.md` / `README.md`
+- [x] **1. Data model** — `lib/ledger.ts` (`CircleKind`, `CircleMember`, extended `CircleState`, new event kinds)
+- [x] **2. Engine** — `lib/open-circle.ts` (+ `lib/escrow-actor.ts`, `lib/env.ts` escrow-only accessors, `ESCROW_ADDRESS`)
+- [x] **3. Client funding** — `lib/wallet.ts` (`upfrontTotal`; reuses the confirmed split→deposit pair)
+- [x] **4. API routes** — `/api/open/create`, `/api/open/join`, `/api/open/advance`; `/api/circle` roster tweak
+- [x] **5. UI** — `app/create/page.tsx`, `components/LobbyJoin.tsx`, lobby view in `app/circle/[id]/page.tsx`, landing link
+- [x] **6. Tests** — `tests/open-circle.test.ts` (lifecycle + guards) — ⏳ needs `npm test` run to confirm
+- [x] **7. Docs** — `DEMO.md` (Open circles section) / `README.md`
+
+### Verification
+
+- [x] `npm run typecheck` — clean
+- [x] `npm test` — 19/19 pass (13 existing + 6 new open-circle)
+- [x] `npm run lint` — no warnings or errors
+- [x] `npm run build` — compiles; `/create` + `/circle/[id]` + `/api/open/*` routes build
+- [ ] Manual: `/create` → copy invite link → open in two browsers, join with two testnet
+      wallets, watch it auto-form and rotate (needs `ESCROW_KEY` + two USDCx-funded wallets)
+
+## Follow-ups added on request
+
+- Removed the decorative `Sparkles` icon (create button, landing CTA, `circle-form` event → `Users`).
+- Shareable invite link: after creating, `/create` shows a **copy-able invite link**
+  (`components/CopyLink.tsx`); the lobby also shows an "Invite others" card while seats remain.
 
 ---
 

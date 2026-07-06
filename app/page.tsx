@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ArrowRight, Check, ShieldCheck, Sparkles } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 import { BitcoinBadge } from "@/components/BitcoinBadge";
 import { Avatar } from "@/components/Avatar";
 import { Reveal } from "@/components/Reveal";
@@ -9,23 +8,9 @@ import { CLOSING, HOW_IT_WORKS, PEOPLE, STORY } from "@/content/story";
  * The landing — the emotional front door (implementation.md §4, Phase 5). Tells
  * the human story (susu / tanda reimagined), shows the real people of the demo
  * circle and what their pot means, frames the Bitcoin-finality credibility
- * anchor, then routes into the live hero. Warm Vault design system throughout;
- * motion is scroll-reveal only (reduced-motion aware) so content stays readable.
+ * anchor. Routing lives in the global navbar (components/Navbar). Warm Vault
+ * design system; motion is scroll-reveal only (reduced-motion aware).
  */
-/**
- * Pulsing green "LIVE" dot — marks the in-progress-circle button so it reads as
- * genuinely live and stays visually distinct from the gold "completed" CTA.
- * Decorative only (the label carries the meaning), so it's aria-hidden.
- */
-function LiveDot() {
-  return (
-    <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
-      <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-60 animate-live-pulse" />
-      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" />
-    </span>
-  );
-}
-
 export default function Home() {
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
@@ -44,33 +29,6 @@ export default function Home() {
         </Reveal>
         <Reveal index={3}>
           <p className="max-w-xl text-balance text-fg-muted">{STORY.subhead}</p>
-        </Reveal>
-        <Reveal index={4}>
-          <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
-            <Link
-              href="/circle/demo"
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-md bg-gradient-gold px-6 py-3 font-medium text-primary-fg shadow-glow transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-            >
-              Watch a completed circle
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link
-              href="/circle/live"
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-success/50 bg-surface px-6 py-3 font-medium text-fg transition-colors duration-200 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-            >
-              <LiveDot />
-              See a circle in progress
-            </Link>
-          </div>
-        </Reveal>
-        <Reveal index={5}>
-          <Link
-            href="/create"
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-6 py-3 font-medium text-primary transition-colors duration-200 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-          >
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-            Start your own circle
-          </Link>
         </Reveal>
       </section>
 
@@ -156,24 +114,6 @@ export default function Home() {
         </Reveal>
         <Reveal index={2}>
           <p className="mx-auto mt-4 max-w-2xl text-balance text-center text-fg-muted">{CLOSING.body}</p>
-        </Reveal>
-        <Reveal index={3}>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/circle/demo"
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-md bg-gradient-gold px-6 py-3 font-medium text-primary-fg shadow-glow transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-            >
-              Watch a completed circle
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link
-              href="/circle/live"
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-success/50 bg-surface px-6 py-3 font-medium text-fg transition-colors duration-200 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-            >
-              <LiveDot />
-              See a circle in progress
-            </Link>
-          </div>
         </Reveal>
       </section>
 

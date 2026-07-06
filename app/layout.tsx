@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { Navbar } from "@/components/Navbar";
 
 // Warm Vault type system (design-system/MASTER.md):
 // Space Grotesk = display, Inter = body/UI, JetBrains Mono = on-chain data.
@@ -39,7 +40,10 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${spaceGrotesk.variable} ${jetBrainsMono.variable}`}
     >
-      <body className="min-h-dvh bg-bg text-fg antialiased">{children}</body>
+      <body className="min-h-dvh bg-bg text-fg antialiased">
+        <Navbar />
+        {children}
+      </body>
     </html>
   );
 }

@@ -6,6 +6,8 @@ import {
   Info,
   LifeBuoy,
   Lock,
+  Users,
+  UserPlus,
   Undo2,
   type LucideIcon,
 } from "lucide-react";
@@ -61,6 +63,18 @@ export const EVENT_META: Record<EventKind, KindMeta> = {
     label: "Bond return",
     tone: "text-success",
     chip: "bg-success/10 border-success/25",
+  },
+  "member-join": {
+    Icon: UserPlus,
+    label: "Member joins",
+    tone: "text-accent",
+    chip: "bg-accent/10 border-accent/25",
+  },
+  "circle-form": {
+    Icon: Users,
+    label: "Circle forms",
+    tone: "text-primary",
+    chip: "bg-primary/10 border-primary/25",
   },
   note: { Icon: Info, label: "Note", tone: "text-fg-muted", chip: "bg-surface-2 border-border" },
 };

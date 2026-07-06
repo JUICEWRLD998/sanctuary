@@ -263,16 +263,17 @@ async function form(state: CircleState, opts: OpenRunOptions): Promise<CircleSta
 
   const members = state.members ?? [];
   state.payoutOrder = members.map((m) => m.id);
-  state.rounds = state.payoutOrder.map((recipientId, index) => ({
+  const rounds: RoundRecord[] = state.payoutOrder.map((recipientId, index) => ({
     index,
     recipientId,
-    status: "pending" as const,
+    status: "pending",
     contributionTxids: [],
     potUsdcx: potPerRound(state),
     defaulters: [],
     shortfallUsdcx: "0",
     compensationTxids: [],
-  })) satisfies RoundRecord[];
+  }));
+  state.rounds = rounds;
 
   record(state, opts, {
     kind: "circle-form",
@@ -280,8 +281,10 @@ async function form(state: CircleState, opts: OpenRunOptions): Promise<CircleSta
     actor: escrow.address,
   });
 
-  // Lock the pooled bonds (the commitment anchor) until the circle ends.
-  if (Number(totalBonds(state)) > 0) {
+  // Lock the pooled bonds (the commitment anchor) until the circle ends. Skip if
+  // already locked, so a re-form (self-heal after a failed auto-form) can't
+  // double-lock.
+  if (Number(totalBonds(state)) > 0 && !state.escrow.bondLockTxid) {
     const lockTxid = await routedDeposit(
       escrow.vault,
       { lock: totalBonds(state), lockUntilBlock: endBlock, splitAddress: null, split: "0" },
@@ -414,8 +417,15 @@ export async function advanceOpenCircle(
   opts: OpenRunOptions = {}
 ): Promise<CircleState> {
   let state = await requireOpen(id);
+  const capacity = state.capacity ?? state.memberCount;
+  const full = (state.members?.length ?? 0) >= capacity;
   if (state.phase === "forming") {
-    throw new Error("This circle hasn't filled yet — it can't run until every seat is taken.");
+    if (!full) {
+      throw new Error("This circle hasn't filled yet — it can't run until every seat is taken.");
+    }
+    // Roster is full but forming didn't complete (e.g. a prior auto-form's lock
+    // failed) — form now. `form` skips the lock if it already landed.
+    state = await form(state, opts);
   }
 
   while (state.currentRound < state.rounds.length) {

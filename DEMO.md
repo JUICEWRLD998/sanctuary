@@ -23,6 +23,39 @@ spoken walkthrough, see **[script.md](./script.md)**. For the trust model and ke
   ([FLOWVAULT_FEEDBACK.md](./FLOWVAULT_FEEDBACK.md)) that would remove the trust entirely.
 - **Two circles are seeded** on testnet: a **completed** one (`demo`) showing a full lifecycle,
   and a **live, mid-flight** one (`live`) showing an in-progress round.
+- **Real users can now run their own circle** (the "open" flow). The seeded demo/live circles
+  are driven by managed keys for the video; a real group instead visits **`/create`**, and each
+  member joins with **their own wallet**. See "Open circles" below.
+
+---
+
+## Open circles — how real users use this (`/create`)
+
+The seeded `demo`/`live` circles use three server-held identities (Amara/Chidi/Fatima) so the
+video is reproducible. That is **not** how a real group uses Sanctuary. The real-user flow is:
+
+1. **Someone creates a circle** at `/create` — choosing the number of members, the contribution
+   per round, and the commitment bond. This makes an **open circle** in a lobby (`forming`).
+2. **Each member joins with their own wallet** on the circle page: they connect Leather/Xverse,
+   enter **their name and what they're saving for**, and **fund their whole obligation upfront**
+   — `bond + (N−1)×contribution` — in one signed move into the escrow. Their address is their id;
+   no private key ever leaves their wallet.
+3. **When the last seat fills, the circle auto-forms**: the escrow LOCKs the pooled bonds and the
+   pot begins rotating. Because every member's contributions are **prepaid into the escrow**, the
+   escrow signs every rotation itself — so the circle is self-driving *and* no member can default
+   mid-circle.
+4. **Each round the escrow SPLITs the pot** `(N−1)×contribution` to that round's recipient.
+5. **At completion** (after the lock expires) the escrow returns every member's bond in full.
+
+**What's real vs. coordinated (open circles):** the members' funding and every rotation/return
+are **real testnet transactions**. The escrow is still an **app-run coordinator** that custodies
+the pooled funds while the circle runs — this is inherent to the "fund upfront, auto-rotate"
+model and is the same *trust-minimized, not trustless* posture as the demo. The proposed Clarity
+`circle-escrow` extension in [FLOWVAULT_FEEDBACK.md](./FLOWVAULT_FEEDBACK.md) is what removes that
+trust. Open circles are **testnet only**.
+
+> Running an open circle end-to-end needs `ESCROW_KEY` configured (the escrow signs forming and
+> rotation). Members do **not** need any managed keys — they sign with their own wallets.
 
 ---
 

@@ -12,6 +12,7 @@ import { AutopilotButton } from "@/components/AutopilotButton";
 import { BitcoinBadge } from "@/components/BitcoinBadge";
 import { ConnectJoin } from "@/components/ConnectJoin";
 import { LobbyJoin } from "@/components/LobbyJoin";
+import { CopyLink } from "@/components/CopyLink";
 import { ExplorerLink } from "@/components/ExplorerLink";
 import { OutcomeReveal } from "@/components/OutcomeReveal";
 import { OUTCOMES, STORY } from "@/content/story";
@@ -63,11 +64,7 @@ export default function CirclePage({ params }: { params: { id: string } }) {
     <main className="mx-auto min-h-dvh w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
       {/* Header */}
       <header className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-display text-lg font-bold tracking-tight">Sanctuary</span>
-            <BitcoinBadge variant="chip" />
-          </div>
+        <div className="flex items-center justify-end">
           <button
             type="button"
             onClick={load}
@@ -306,11 +303,7 @@ function LobbyView({
   return (
     <main className="mx-auto min-h-dvh w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
       <header className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-display text-lg font-bold tracking-tight">Sanctuary</span>
-            <BitcoinBadge variant="chip" />
-          </div>
+        <div className="flex items-center justify-end">
           <button
             type="button"
             onClick={onRefetchNeeded}
@@ -367,6 +360,16 @@ function LobbyView({
 
         <aside className="flex flex-col gap-6">
           <BitcoinBadge variant="full" />
+          {emptySeats > 0 && (
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <h2 className="font-display text-sm font-semibold text-fg">Invite others</h2>
+              <p className="mt-1 mb-3 text-xs text-fg-muted">
+                Share this link to fill the {emptySeats} open{" "}
+                {emptySeats === 1 ? "seat" : "seats"}.
+              </p>
+              <CopyLink path={`/circle/${id}`} label="circle invite link" />
+            </div>
+          )}
           <LobbyJoin
             circleId={id}
             escrowAddress={circle.escrow.address}
