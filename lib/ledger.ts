@@ -87,10 +87,50 @@ export interface RoundRecord {
   compensationTxids: string[];
 }
 
+/**
+ * How a circle is driven.
+ *   "managed" — the seeded demo: members are server-held keys the orchestrator
+ *               signs for (Amara/Chidi/Fatima). Absent on legacy files → managed.
+ *   "open"    — the real-user flow: members are real wallets that join a lobby and
+ *               fund upfront; the escrow auto-rotates. See createcircle.md.
+ */
+export type CircleKind = "managed" | "open";
+
+/**
+ * A real member of an OPEN circle (real-user flow). Unlike managed demo members
+ * (lib/members.ts), these are self-custodial wallets — we never hold their key.
+ * Their Stacks address is their unique id; name + purpose are their own words.
+ */
+export interface CircleMember {
+  /** Stable 0-based index; also the join order and default payout position. */
+  id: number;
+  /** The member's own Stacks (testnet) address — their unique identity. */
+  address: string;
+  /** Display name the member entered when joining. */
+  name: string;
+  /** What they're saving the pot for — surfaced in the story/outcome UI. */
+  purpose: string;
+  /** txid of their upfront funding deposit (bond + contributions) into escrow. */
+  fundTxid: string;
+  /** ISO timestamp they joined. */
+  joinedAt: string;
+}
+
 /** The complete persisted state of one savings circle. */
 export interface CircleState {
   id: string;
   phase: CirclePhase;
+  /** Managed demo vs. open real-user circle. Absent on legacy files ⇒ "managed". */
+  kind?: CircleKind;
+  /** Human-readable circle name (open circles). */
+  title?: string;
+  /** Target roster size for an open circle's lobby (equals memberCount once full). */
+  capacity?: number;
+  /**
+   * Real members of an open circle, in join order. Absent for managed demo
+   * circles, which resolve their roster from lib/members MEMBER_PROFILES.
+   */
+  members?: CircleMember[];
   memberCount: number;
   /** Per-member per-round contribution, whole USDCx. */
   contribution: string;
