@@ -20,7 +20,7 @@
  *
  * SERVER-ONLY — signs with the escrow key via lib/escrow-actor.
  */
-import { CIRCLE } from "./constants";
+import { CIRCLE, ESCROW_ADDRESS } from "./constants";
 import { getEscrowActor, type EscrowActor } from "./escrow-actor";
 import { getTxSender, waitForTx } from "./explorer";
 import {
@@ -160,7 +160,9 @@ export async function createOpenCircle(p: CreateOpenParams): Promise<CircleState
     currentRound: 0,
     createdBlock: null,
     endBlock: null,
-    escrow: { address: null, bondLockTxid: null },
+    // Stamp the public escrow address now so members have somewhere to fund
+    // before the circle fills; the escrow signs from ESCROW_KEY (same principal).
+    escrow: { address: ESCROW_ADDRESS, bondLockTxid: null },
     rounds: [], // built at form time
     events: [],
     updatedAt: new Date().toISOString(),

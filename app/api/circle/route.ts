@@ -9,9 +9,33 @@
  */
 import { NextResponse } from "next/server";
 import { addressUrl, fetchAddressUsdcx, txUrl, withEventUrls } from "@/lib/explorer";
-import { loadCircle } from "@/lib/ledger";
-import { MEMBER_PROFILES } from "@/lib/members";
+import { loadCircle, type CircleMember, type CircleState } from "@/lib/ledger";
+import { MEMBER_PROFILES, type MemberProfile } from "@/lib/members";
 import { hasServerEnv } from "@/lib/env";
+
+/** A short, on-brand rendering of a Stacks address (identity for open members). */
+function shortAddress(address: string): string {
+  return address.length > 12 ? `${address.slice(0, 5)}…${address.slice(-4)}` : address;
+}
+
+/**
+ * The member roster the UI renders. Open (real-user) circles carry their own
+ * members (real wallets); their `purpose` becomes the "saving for" line and a
+ * short address stands in for the location field. Managed demo circles fall back
+ * to the seeded MEMBER_PROFILES.
+ */
+function rosterFor(state: CircleState): MemberProfile[] {
+  if (state.kind === "open") {
+    return (state.members ?? []).map((m: CircleMember) => ({
+      id: m.id,
+      name: m.name,
+      city: shortAddress(m.address),
+      reason: m.purpose,
+      emoji: "",
+    }));
+  }
+  return [...MEMBER_PROFILES];
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,6 +103,6 @@ export async function GET(req: Request) {
         bondLockUrl: state.escrow.bondLockTxid ? txUrl(state.escrow.bondLockTxid) : null,
       },
     },
-    members: MEMBER_PROFILES,
+    members: rosterFor(state),
   });
 }

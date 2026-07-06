@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, ShieldCheck, Sparkles } from "lucide-react";
 import { BitcoinBadge } from "@/components/BitcoinBadge";
 import { Avatar } from "@/components/Avatar";
 import { Reveal } from "@/components/Reveal";
@@ -62,6 +62,15 @@ export default function Home() {
               See a circle in progress
             </Link>
           </div>
+        </Reveal>
+        <Reveal index={5}>
+          <Link
+            href="/create"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-6 py-3 font-medium text-primary transition-colors duration-200 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Start your own circle
+          </Link>
         </Reveal>
       </section>
 

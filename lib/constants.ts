@@ -15,6 +15,15 @@ export const FLOWVAULT = {
   tokenContractName: "usdcx",
 } as const;
 
+/**
+ * The app-run escrow principal's PUBLIC Stacks address. Public and stable (it is
+ * the same principal shown in the demo ledgers and README), so open circles can
+ * stamp it at creation — members need somewhere to send their upfront funds
+ * before the circle fills. The server derives the same address from ESCROW_KEY
+ * for signing (lib/escrow-actor); the key must correspond to this address.
+ */
+export const ESCROW_ADDRESS = "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT";
+
 /** USDCx uses 6 decimals (tokenToMicro("1") === 1_000_000n). */
 export const USDCX_DECIMALS = 6;
 

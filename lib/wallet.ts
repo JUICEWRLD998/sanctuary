@@ -112,17 +112,13 @@ export async function depositJoin(vault: FlowVault, amount: string): Promise<str
 }
 
 /**
- * Open-circle join: fund the FULL upfront obligation into the escrow in one
- * move — `bond + (N-1)×contribution`. Same confirmed split→deposit pair as the
- * demo join (setJoinStrategy → wait → depositJoin), just the whole amount, so
- * the escrow holds every member's prepaid contributions and can auto-rotate.
- *
- * Caller is responsible for waiting on the rule tx between the two steps (as
- * ConnectJoin/LobbyJoin do) — FlowVault applies the split rule on the *next*
- * deposit. Returns both txids; `depositTxid` is the one recorded as the member's
- * `fundTxid`.
+ * Client-safe copy of an open circle's full upfront obligation:
+ * `bond + (N-1)×contribution`. LobbyJoin funds exactly this amount using the
+ * existing confirmed split→deposit pair (setJoinStrategy → wait → depositJoin),
+ * so the escrow holds every member's prepaid contributions and can auto-rotate.
+ * Mirrors `upfrontTotal` in lib/open-circle (which is server-only).
  */
-export async function fundCircleTotal(capacity: number, contribution: string, bond: string): string {
+export function upfrontTotal(capacity: number, contribution: string, bond: string): string {
   return String(Number(bond) + (capacity - 1) * Number(contribution));
 }
 

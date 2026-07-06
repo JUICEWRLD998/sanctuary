@@ -4,12 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import type { CircleResponse, CircleView, MemberProfile } from "@/lib/circle-view";
 import type { StreakStatus } from "@/components/StreakBar";
+import { Avatar } from "@/components/Avatar";
 import { CircleRing } from "@/components/CircleRing";
 import { MemberCard } from "@/components/MemberCard";
 import { RoundTimeline } from "@/components/RoundTimeline";
 import { AutopilotButton } from "@/components/AutopilotButton";
 import { BitcoinBadge } from "@/components/BitcoinBadge";
 import { ConnectJoin } from "@/components/ConnectJoin";
+import { LobbyJoin } from "@/components/LobbyJoin";
 import { ExplorerLink } from "@/components/ExplorerLink";
 import { OutcomeReveal } from "@/components/OutcomeReveal";
 import { OUTCOMES, STORY } from "@/content/story";
@@ -111,6 +113,14 @@ function CircleBody({
   onRefetchNeeded: () => void;
 }) {
   const { circle, members } = data;
+
+  // Open (real-user) circles that are still filling render a lobby instead of
+  // the rotation hero — people join with their own wallets first.
+  const isOpen = circle.kind === "open";
+  if (isOpen && circle.phase === "forming") {
+    return <LobbyView id={id} circle={circle} members={members} onRefetchNeeded={onRefetchNeeded} />;
+  }
+
   const totalRounds = circle.rounds.length || circle.payoutOrder.length;
 
   const recipientId =
@@ -138,7 +148,17 @@ function CircleBody({
   const landedMember = landedId != null ? members.find((m) => m.id === landedId) : null;
   const landed =
     landedMember != null
-      ? { id: landedMember.id, name: landedMember.name, outcome: OUTCOMES[landedMember.name] ?? `${landedMember.name}'s pot has landed.` }
+      ? {
+          id: landedMember.id,
+          name: landedMember.name,
+          // Managed demo members have a scripted outcome line; open-circle
+          // members get one built from the purpose they entered.
+          outcome:
+            OUTCOMES[landedMember.name] ??
+            (landedMember.reason
+              ? `${landedMember.name}'s pot lands — ${landedMember.reason.toLowerCase()}.`
+              : `${landedMember.name}'s pot has landed.`),
+        }
       : null;
 
   return (
@@ -160,7 +180,7 @@ function CircleBody({
         {landed && <OutcomeReveal recipient={landed} pot={pot} complete={circle.phase === "complete"} />}
 
         <div>
-          <AutopilotButton circleId={id} onComplete={onRefetchNeeded} />
+          <AutopilotButton circleId={id} open={isOpen} onComplete={onRefetchNeeded} />
         </div>
 
         <div>
@@ -186,11 +206,15 @@ function CircleBody({
       <aside className="flex flex-col gap-6">
         <BitcoinBadge variant="full" />
 
-        <ConnectJoin
-          escrowAddress={circle.escrow.address}
-          escrowName="the Sanctuary escrow"
-          bond={circle.bond}
-        />
+        {/* The demo "feel the move yourself" join card is only for the managed
+            demo circle; open circles use the real lobby-join flow instead. */}
+        {!isOpen && (
+          <ConnectJoin
+            escrowAddress={circle.escrow.address}
+            escrowName="the Sanctuary escrow"
+            bond={circle.bond}
+          />
+        )}
 
         <EscrowProof circle={circle} />
 
@@ -253,6 +277,124 @@ function EscrowProof({ circle }: { circle: CircleView }) {
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * The lobby for an open (real-user) circle that is still filling: shows who has
+ * joined and what they're saving for, an empty-seat count, the join card, and a
+ * live read of the bonds already landed at the escrow. Once the last seat fills,
+ * the server auto-forms the circle and this view gives way to the rotation hero.
+ */
+function LobbyView({
+  id,
+  circle,
+  members,
+  onRefetchNeeded,
+}: {
+  id: string;
+  circle: CircleView;
+  members: MemberProfile[];
+  onRefetchNeeded: () => void;
+}) {
+  const capacity = circle.capacity ?? circle.memberCount;
+  const joined = members.length;
+  const emptySeats = Math.max(0, capacity - joined);
+  const joinedAddresses = (circle.members ?? []).map((m) => m.address);
+  const upfront = Number(circle.bond) + (capacity - 1) * Number(circle.contribution);
+
+  return (
+    <main className="mx-auto min-h-dvh w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <header className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-display text-lg font-bold tracking-tight">Sanctuary</span>
+            <BitcoinBadge variant="chip" />
+          </div>
+          <button
+            type="button"
+            onClick={onRefetchNeeded}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-border bg-surface px-4 py-2 text-xs text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Refresh lobby"
+          >
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+            Refresh
+          </button>
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-primary">
+            Forming · {joined} of {capacity} joined
+          </p>
+          <h1 className="mt-2 text-balance text-2xl font-bold leading-tight sm:text-3xl">
+            {circle.title ?? "A savings circle"}
+          </h1>
+          <p className="mt-3 text-balance text-sm text-fg-muted">
+            Each member funds {upfront} USDCx upfront and receives the {(capacity - 1) * Number(circle.contribution)} USDCx
+            pot on their turn. When the last seat is taken, the bonds lock and the pot starts
+            rotating automatically.
+          </p>
+        </div>
+      </header>
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
+        <section className="flex flex-col gap-4">
+          <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-fg-muted">
+            The circle so far
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {members.map((m) => (
+              <div key={m.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-4">
+                <Avatar id={m.id} name={m.name} size="md" />
+                <div className="min-w-0">
+                  <p className="truncate font-display font-semibold text-fg">{m.name}</p>
+                  <p className="truncate text-xs text-fg-muted">Saving for {m.reason.toLowerCase()}</p>
+                </div>
+              </div>
+            ))}
+            {Array.from({ length: emptySeats }).map((_, i) => (
+              <div
+                key={`empty-${i}`}
+                className="flex items-center gap-3 rounded-lg border border-dashed border-border bg-surface/50 p-4 text-fg-muted"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-dashed border-border text-lg">
+                  +
+                </div>
+                <p className="text-xs">Open seat</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <aside className="flex flex-col gap-6">
+          <BitcoinBadge variant="full" />
+          <LobbyJoin
+            circleId={id}
+            escrowAddress={circle.escrow.address}
+            capacity={capacity}
+            contribution={circle.contribution}
+            bond={circle.bond}
+            joinedAddresses={joinedAddresses}
+            onJoined={onRefetchNeeded}
+          />
+          {circle.escrow.held != null && (
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-sm font-semibold text-fg">Bonds landed at escrow</h2>
+                {circle.escrow.url && (
+                  <ExplorerLink url={circle.escrow.url} label="escrow address">
+                    view
+                  </ExplorerLink>
+                )}
+              </div>
+              <p className="mt-2 font-data text-lg text-fg">{circle.escrow.held} USDCx</p>
+              <p className="mt-1 text-xs text-fg-muted">
+                Real funds from members who&apos;ve already joined, held at the escrow on testnet.
+              </p>
+            </div>
+          )}
+        </aside>
+      </div>
+    </main>
   );
 }
 

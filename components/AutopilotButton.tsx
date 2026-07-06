@@ -5,6 +5,11 @@ import { AlertCircle, Loader2, Play } from "lucide-react";
 
 interface AutopilotButtonProps {
   circleId: string;
+  /**
+   * Open (real-user) circle → drive it via /api/open/advance (escrow-signed).
+   * Managed demo circle (default) → /api/orchestrator autopilot.
+   */
+  open?: boolean;
   /** Called after the run settles so the page can refetch live state. */
   onComplete?: () => void;
 }
@@ -12,11 +17,12 @@ interface AutopilotButtonProps {
 type Status = "idle" | "running" | "error";
 
 /**
- * Primary CTA — drives the managed circle through its full lifecycle on testnet
- * (join → rounds → complete) via /api/orchestrator. One primary action per view;
- * disabled + spinner while broadcasting so it can't be double-fired.
+ * Primary CTA — drives a circle through its remaining lifecycle on testnet.
+ * Managed demo circles run join → rounds → complete via /api/orchestrator; open
+ * circles rotate the prepaid pot via /api/open/advance. One primary action per
+ * view; disabled + spinner while broadcasting so it can't be double-fired.
  */
-export function AutopilotButton({ circleId, onComplete }: AutopilotButtonProps) {
+export function AutopilotButton({ circleId, open = false, onComplete }: AutopilotButtonProps) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -24,10 +30,10 @@ export function AutopilotButton({ circleId, onComplete }: AutopilotButtonProps) 
     setStatus("running");
     setError(null);
     try {
-      const res = await fetch("/api/orchestrator", {
+      const res = await fetch(open ? "/api/open/advance" : "/api/orchestrator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "autopilot", id: circleId }),
+        body: JSON.stringify(open ? { id: circleId } : { action: "autopilot", id: circleId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "The run failed.");
