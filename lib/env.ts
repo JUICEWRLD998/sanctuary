@@ -47,6 +47,30 @@ export function hasServerEnv(): boolean {
 }
 
 /**
+ * True when just the escrow key is present. Open (real-user) circles only need
+ * the escrow to sign — members fund themselves and the escrow auto-rotates — so
+ * they don't require the managed MEMBER_*_KEY set the demo uses.
+ */
+export function hasEscrowKey(): boolean {
+  return Boolean(read("ESCROW_KEY"));
+}
+
+/**
+ * Return the escrow private key, or throw a precise error. For the open-circle
+ * flow (escrow-only signing); see {@link requireServerEnv} for the managed demo.
+ */
+export function requireEscrowKey(): string {
+  const escrowKey = read("ESCROW_KEY");
+  if (!escrowKey) {
+    throw new Error(
+      "Missing ESCROW_KEY. Set it in .env.local (testnet key only) to run open " +
+        "circles. See createcircle.md."
+    );
+  }
+  return escrowKey;
+}
+
+/**
  * Return all managed signing keys, or throw a precise error naming the missing
  * variables. Call this only from server-side signing paths (the orchestrator).
  */

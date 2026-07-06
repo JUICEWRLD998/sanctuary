@@ -111,6 +111,21 @@ export async function depositJoin(vault: FlowVault, amount: string): Promise<str
   return txidOf(result);
 }
 
+/**
+ * Open-circle join: fund the FULL upfront obligation into the escrow in one
+ * move — `bond + (N-1)×contribution`. Same confirmed split→deposit pair as the
+ * demo join (setJoinStrategy → wait → depositJoin), just the whole amount, so
+ * the escrow holds every member's prepaid contributions and can auto-rotate.
+ *
+ * Caller is responsible for waiting on the rule tx between the two steps (as
+ * ConnectJoin/LobbyJoin do) — FlowVault applies the split rule on the *next*
+ * deposit. Returns both txids; `depositTxid` is the one recorded as the member's
+ * `fundTxid`.
+ */
+export async function fundCircleTotal(capacity: number, contribution: string, bond: string): string {
+  return String(Number(bond) + (capacity - 1) * Number(contribution));
+}
+
 /** Read the connected wallet's spendable USDCx balance (whole USDCx). */
 export async function fetchUsdcxBalance(address: string): Promise<number> {
   const res = await fetch(`${HIRO_API}/extended/v1/address/${address}/balances`);

@@ -66,6 +66,24 @@ export async function fetchAddressUsdcx(address: string): Promise<string> {
   }
 }
 
+/**
+ * Read the sender (origin) principal of a settled transaction from the public
+ * Hiro API, or null if unavailable. Used to verify that an open-circle member's
+ * upfront funding transaction was actually signed by the wallet that is joining
+ * (not a replayed/borrowed txid). Best-effort: returns null on any error.
+ */
+export async function getTxSender(txid: string): Promise<string | null> {
+  const id = normalizeTxid(txid);
+  try {
+    const res = await fetch(`${HIRO_API}/extended/v1/tx/${id}`);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { sender_address?: string };
+    return data.sender_address ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export type TxStatus =
   | "pending"
   | "success"
