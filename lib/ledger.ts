@@ -24,6 +24,8 @@ export type EventKind =
   | "payout" // marker: a round's pot has fully landed on the recipient
   | "compensation" // escrow makes a shorted recipient whole from forfeited bonds (SPLIT) — Phase 2
   | "bond-return" // escrow returns a bond after completion (SPLIT)
+  | "member-join" // an open-circle member funded their bond + contributions upfront (SPLIT) — real-user flow
+  | "circle-form" // an open circle filled its roster; bonds locked and rotation begins — real-user flow
   | "note"; // non-chain lifecycle marker
 
 /** One recorded step in a circle's life; most carry a real testnet txid. */
