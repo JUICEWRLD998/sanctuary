@@ -1,64 +1,149 @@
 # Sanctuary
 
 **Programmable, Bitcoin-secured savings circles on Stacks.**
+
 The oldest way to save — the rotating savings circle (ROSCA / **susu** / **tanda** / "committee")
-that ~1B+ people already run on trust — reimagined as self-driving money, composed entirely from
+that a billion people already run on trust — rebuilt as self-driving money, composed entirely from
 FlowVault's **Lock · Split · Hold** primitives and settled with Bitcoin finality.
 
-> FlowVault Builder Bounty submission · Stacks **testnet** · every transaction below is real and
-> auditable on the Hiro explorer.
+> FlowVault Builder Bounty submission · Stacks **testnet** · every transaction the app shows is real
+> and auditable on the Hiro explorer.
 
 ---
 
-## What it is
+## The problem
 
-A savings circle: `N` members each contribute a fixed amount every round, and each round the **whole
-pot** rotates to one member — a lump sum exactly when they need it (school fees, a fridge for the
-shop, a rent deposit). Members post a **commitment bond** up front so no one can walk away mid-circle.
+Rotating savings circles move **hundreds of billions of dollars a year**, entirely on trust. A group
+agrees to pay a fixed amount into a shared pot each round, and each round the whole pot goes to one
+member — so everyone gets a lump sum on their turn, exactly when they need it (school fees, rent, a
+fridge for the shop, stock for market week).
 
-Sanctuary runs this on-chain, automatically:
+They work because of social pressure, and they fail the same way:
 
-- **Self-driving.** An orchestration engine drives a live 3-member circle end-to-end on managed
-  testnet accounts — judges watch real LOCK + SPLIT transactions fire with explorer links.
-- **Join it yourself.** A connect-wallet path lets you join a round with your own wallet (Leather /
-  Xverse) — the same on-chain move the engine makes, no private key ever leaving your wallet.
-- **Auditable.** Bonds are locked in an escrow vault you can read live; every contribution, lock, and
-  payout is a verifiable Stacks transaction anchored to Bitcoin.
+- **Someone takes an early payout and stops contributing.** The people later in the order are left short.
+- **The organiser holds the money.** Members have to trust one person not to lose it or run.
+- **There's no ledger.** Disputes come down to whose memory you believe.
 
-## Why it fits the bounty
+The tradition is proven; the trust is fragile.
 
-The bounty rewards **new financial behaviors** built on programmable routing and disqualifies
-dashboards / wallet-wrappers / clones. A rotating circle is a genuinely novel on-chain behavior that
-**needs all three primitives** and a real orchestration engine — it maps onto every judging axis:
+## The solution — Sanctuary
 
-| Axis | How Sanctuary earns it |
-|------|------------------------|
-| Innovation & Design (35%) | Culturally original — a billion-person tradition made programmable; a living, human hero UI |
-| FlowVault Integration (30%) | Uses **all three** primitives (Lock + Split + Hold), both signer modes |
-| Technical Execution (20%) | A real state-machine engine sequencing splits over blocks; unit-tested invariants |
-| Ecosystem Value (15%) | A forkable `circle-engine`; documented SDK feedback + a Clarity escrow proposal |
+Sanctuary runs the exact same ritual, but the money is programmable and the ledger is public:
 
-## The three primitives → the circle
+- **A commitment bond, locked on-chain.** Every member posts a bond up front. It's held in an escrow
+  vault and **locked until the circle ends**, so no one can walk away mid-circle without consequence.
+- **The pot rotates automatically.** Each round the whole pot routes to that round's recipient as a
+  real on-chain payout — no organiser deciding who gets paid.
+- **Every move is auditable.** Each contribution, lock, and payout is a verifiable Stacks transaction,
+  anchored to Bitcoin. The escrow balance can be read live; at the end it drains to exactly zero.
 
-| Circle mechanic | Primitive |
-|-----------------|-----------|
-| Post commitment bond → escrow | **SPLIT** |
-| Escrow secures pooled bonds until circle end | **LOCK** |
-| Each round, the pot rotates to one member | **SPLIT** (sequenced, many-to-one) |
-| Pre-funded liquidity buffers | **HOLD** |
-| Default → shorted member made whole from defaulter's bond | **SPLIT** (escrow) |
-| Completion → bonds returned | **SPLIT** (escrow) |
+Two ways to experience it:
 
-Full detail in **[INTEGRATION.md](./INTEGRATION.md)**.
+| Route | What it is |
+|-------|-----------|
+| **`/circle/demo`** | A **completed** 3-member circle. A full lifecycle already ran on testnet — **14 real transactions** you can click straight through to the Hiro explorer. Nothing to run; it already happened. The always-works proof. |
+| **`/create`** | **Start your own real circle.** Set the size, contribution, and bond; share the invite link; each member joins with **their own wallet** (Leather / Xverse) and funds their share upfront. When the last seat fills, the circle auto-forms, locks the bonds, and the pot begins rotating. |
+
+
+## How FlowVault powers it
+
+Sanctuary is composed **entirely** from FlowVault's routing primitives — it never invents its own
+token logic. Each circle mechanic is one primitive:
+
+| Circle mechanic | FlowVault primitive |
+|-----------------|---------------------|
+| Member posts a commitment bond into the escrow | **SPLIT** (member → escrow) |
+| Escrow secures the pooled bonds until the circle ends | **LOCK** (until `endBlock`) |
+| Each round, the whole pot routes to one member | **SPLIT** (sequenced, many-to-one) |
+| Members pre-fund their contributions as a liquid buffer | **HOLD** |
+| A default → the shorted member is made whole from the defaulter's bond | **SPLIT** (escrow) |
+| Completion → every bond is returned in full | **SPLIT** (escrow) |
+
+**The core move, everywhere:** set a routing rule, then deposit — so FlowVault applies the
+LOCK / SPLIT / HOLD atomically on that deposit. Because a principal's rule is applied on its *next*
+deposit, the engines broadcast `set-routing-rules`, **wait for it to confirm**, then broadcast the
+`deposit`. That ordering is why a live run takes minutes — it's real block confirmation, not a spinner.
+
+**Two signer modes, one SDK:**
+
+- **`senderKey` mode (server-side).** The demo orchestrator and the escrow sign real testnet
+  transactions with managed keys held only in server env. Wrapped in `lib/flow.ts`.
+- **Wallet mode (`@stacks/connect`).** A real member joining via `/create` signs the identical
+  split-then-deposit in **their own** Leather / Xverse wallet — no private key ever leaves it.
+  Wrapped in `lib/wallet.ts`.
+
+Primitive-by-primitive detail with code lives in **[INTEGRATION.md](./INTEGRATION.md)**.
+
+---
+
+## Architecture
+
+```
+Browser (Next.js App Router, client components)
+  /                     landing — the human story + how a circle works
+  /circle/[id]          circle hero (rotation ring, timeline, live escrow read)
+                        └─ open + forming? → lobby view (LobbyJoin, own-wallet)
+  /create               organiser sets circle shape → shareable invite link
+
+API routes (Node runtime, server-only signing)
+  GET  /api/circle          read a circle's live state + escrow (snapshot if complete)
+  POST /api/orchestrator    drive the managed demo circle (senderKey mode)
+  POST /api/open/create     create an open lobby (ledger-only, no keys)
+  POST /api/open/join       verify a member's funding tx, add them, auto-form when full
+  POST /api/open/advance    escrow-signed rotation of a formed open circle
+
+lib/ (engines + SDK integration)
+  circle-engine.ts   managed-demo state machine (join → rounds → complete → default)
+  open-circle.ts     real-user engine: fund-upfront lobby → auto-rotate → bond return
+  flow.ts            flowvault-sdk wrappers, senderKey mode (server signing)
+  wallet.ts          flowvault-sdk via @stacks/connect (member self-signing)
+  members.ts         managed demo actors (keys from server env, addresses derived)
+  escrow-actor.ts    escrow-only signer for open circles (ESCROW_KEY)
+  env.ts             server-only key access + "is it configured?" guards
+  ledger.ts          circle schema + JSON persistence (one file per circle)
+  constants.ts       contract targets + circle economics
+  explorer.ts        Hiro reads, tx confirmation waits, txid → explorer URLs
+  circle-view.ts     read-API view types shared with the client
+
+content/story.ts     narrative copy (headlines, people, outcomes) — no UI coupling
+data/circles/*.json  each circle's full life + real txids (the audit trail)
+components/          CircleRing, RoundTimeline, OutcomeReveal, MemberCard,
+                    LobbyJoin, AutopilotButton, Navbar, Bitcoin/Explorer badges…
+```
+
+### How a circle moves (open / real-user flow)
+
+```
+organiser  ── POST /api/open/create ──▶  lobby (forming)  ── invite link ──▶  members
+members    ── sign split→deposit in own wallet ──▶ fund bond + contributions into escrow
+           ── POST /api/open/join ──▶ verify tx on-chain, record seat
+last seat  ── auto-form ──▶ escrow LOCKs pooled bonds until endBlock ──▶ active
+run        ── POST /api/open/advance ──▶ escrow SPLITs the pot to each round's recipient
+lock ends  ── escrow reclaims + returns every bond ──▶ complete (books drain to 0)
+```
+
+Because every member's contributions are **prepaid into the escrow at join**, the escrow signs every
+rotation itself — the circle is genuinely self-driving, and no member can default mid-circle.
+
+**Tech:** Next.js 14 (App Router, TypeScript) · Tailwind CSS · Framer Motion · `flowvault-sdk` ·
+`@stacks/connect` · `@stacks/transactions`. Persistence is a JSON ledger per circle (no database) so
+the whole audit trail is diffable and portable.
+
+---
 
 ## Proof (testnet)
 
-A complete 3-member lifecycle = **14 real transactions**. Escrow principal
+A complete 3-member `demo` lifecycle = **14 real transactions** (3 bonds → 1 escrow lock →
+6 contributions → 1 escrow reclaim → 3 bond returns). Escrow principal
 `ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT`.
 
 - Escrow bond **LOCK** — [`b68df8…a2cf`](https://explorer.hiro.so/txid/0xb68df8994b0c6c777e2b5a835aed06afc45b90e0e5f55f151f3c47ec38f3a2cf?chain=testnet)
 - Round payout **SPLIT** — [`978af8…9cfde`](https://explorer.hiro.so/txid/0x978af837a468a3846d37b3a59420d178e3da4257d37575d44775da787679cfde?chain=testnet)
 - Final **bond return** — [`31f02c…1d38`](https://explorer.hiro.so/txid/0x31f02cc6b002c6cd61a0f768b246ab52b58d64b1e9ee1793e44acdcec95d1d38?chain=testnet)
+
+Every other event links to the explorer directly from `/circle/demo`.
+
+---
 
 ## Getting started
 
@@ -68,17 +153,16 @@ cp .env.example .env.local   # fill with TESTNET keys only (see below)
 npm run dev                  # http://localhost:3000
 ```
 
-- `/create` — **start your own real circle.** Set the size, contribution, and bond; then real
-  members join with their own wallets and fund upfront. See "Open circles" in **[DEMO.md](./DEMO.md)**.
-- `/` — the story landing. "Watch the circle live" links into the completed circle below.
-- `/circle/demo` — a **completed** circle: a full 3-member lifecycle (14 real testnet txs)
-  you can click through to the Hiro explorer. Nothing to run — it already happened.
-- `/circle/live` — a **mid-flight** circle: round 1 settled, rounds 2–3 pending, escrow read
-  live. The "Run the circle live" button here advances the remaining rounds on testnet
-  (needs managed keys; takes a few minutes as it waits on block confirmations).
+Then:
 
-> New here? **[DEMO.md](./DEMO.md)** explains exactly what each "live" surface does and gives
-> a click-by-click demo runbook — start there.
+- Open **`/`** for the story, then the **Demo** nav link (`/circle/demo`) to click through a completed
+  circle's real transactions.
+- Open **`/create`** to start your own circle. Each member needs a Leather / Xverse wallet on **Stacks
+  testnet** funded with **USDCx** (the token the circle moves). Each member funds
+  `bond + (N−1) × contribution` upfront — e.g. a 3-member, 1-USDCx circle needs **3 USDCx** per member.
+
+> USDCx on testnet is protocol-mint-gated — fund each wallet via the FlowVault dApp faucet before
+> joining. STX (for gas) comes from the standard Hiro testnet faucet.
 
 ### Environment (testnet only)
 
@@ -86,58 +170,53 @@ Signing keys are **server-only** and read from `.env.local` (gitignored). See
 [`.env.example`](./.env.example):
 
 ```
-ESCROW_KEY=        # the app-run escrow principal
-MEMBER_1_KEY=      # managed demo members (join / payout order)
-MEMBER_2_KEY=
+ESCROW_KEY=        # the app-run escrow principal — the ONLY key /create needs
+MEMBER_1_KEY=      # managed demo members that drive /circle/demo (join / payout order)
+MEMBER_2_KEY=      # the app reads exactly CIRCLE.memberCount of these (currently 3)
 MEMBER_3_KEY=
 ```
 
-Without keys the app still builds and renders (read-only paths); the orchestrator returns a clear
-"keys not configured" error. **Testnet keys only — never mainnet.** See **[SECURITY.md](./SECURITY.md)**.
+- **Open circles (`/create`)** need only `ESCROW_KEY` — members sign with their own wallets.
+- **The managed `demo` circle** additionally needs `MEMBER_1..3_KEY`.
+- Without keys the app still builds and renders read-only paths; signing routes return a clear
+  "keys not configured" error and fire nothing.
+
+**Testnet keys only — never mainnet.** See **[SECURITY.md](./SECURITY.md)** for the trust model and
+key custody.
+
+---
 
 ## Scripts
 
 | Command | What it does |
 |---------|--------------|
 | `npm run dev` / `build` / `start` | Next.js app |
-| `npm test` | Vitest — pot math, lifecycle, default compensation, escrow balance (13 tests) |
+| `npm test` | Vitest — pot math, full lifecycle, default compensation, escrow balance conservation |
 | `npm run typecheck` / `lint` | `tsc --noEmit` / `next lint` |
-| `npm run verify:phase1` | Read-only pre-flight: per-account STX/USDCx GO/NO-GO |
-| `npm run phase1:run` | Drive the autopilot, then assert ledger invariants + live escrow read |
+| `npm run setup` | Generate managed testnet member/escrow keys into `.env.local` |
+| `npm run verify:phase1` | Read-only pre-flight: per-account STX / USDCx GO/NO-GO. No transactions |
+| `npm run phase1:run` | Drive the managed circle end-to-end on testnet, then assert ledger invariants |
 | `npm run phase2:default` | Run a circle with a simulated default; assert on-chain compensation |
 
-## Architecture
-
-```
-app/
-  page.tsx                 # story landing
-  circle/[id]/page.tsx     # live circle hero
-  api/orchestrator/route.ts# drive the managed circle (server-only signing)
-  api/circle/route.ts      # read live circle + escrow state
-lib/
-  circle-engine.ts         # the rotating-circle state machine (reusable)
-  flow.ts / wallet.ts      # flowvault-sdk wrappers: senderKey + wallet modes
-  members.ts ledger.ts     # members/escrow; JSON persistence of rounds + txids
-  constants.ts explorer.ts # contract targets, economics; txid → explorer URL
-components/                # CircleRing, RoundTimeline, OutcomeReveal, ConnectJoin, …
-```
-
-**Tech:** Next.js 14 (App Router, TS) · TailwindCSS · Framer Motion · `flowvault-sdk` ·
-`@stacks/connect` · `@stacks/transactions`. Design system: **Warm Vault** (`design-system/MASTER.md`).
+---
 
 ## The honest constraint
 
-FlowVault v2 is per-principal with self-locks only and no native multi-recipient split, so the
-circle's many-to-one payouts and third-party bond custody use an **off-chain orchestrator** + an
-**app-run escrow principal**, presented as a **trust-minimized coordinator, not trustless**, on
-**testnet only**. The [SDK feedback](./FLOWVAULT_FEEDBACK.md) documents each gap we hit and proposes
-a native Clarity `circle-escrow` extension that would make circles fully trustless.
+FlowVault v2 is **per-principal**: one vault per wallet, self-locks only, a single split target. A
+rotating circle needs **many-to-one payouts** and **third-party bond custody**, which v2 can't express
+natively. So Sanctuary sequences real single-split deposits with an **off-chain engine** and custodies
+the pooled bonds in an **app-run escrow principal**.
+
+We're deliberate about this: the escrow is a **trust-minimised coordinator, not a trustless contract**,
+and Sanctuary is **testnet only**. Every gap we hit — and a proposed native Clarity `circle-escrow`
+extension that would remove the trust entirely — is documented in
+**[FLOWVAULT_FEEDBACK.md](./FLOWVAULT_FEEDBACK.md)**.
+
+---
 
 ## Docs
 
-- **[DEMO.md](./DEMO.md)** — what's real vs. orchestrated, the three "live" surfaces, and a demo runbook.
-- **[script.md](./script.md)** — the ≤3-minute spoken demo-video script.
+- **[script.md](./script.md)** — the ≤ 3-minute spoken demo-video script.
 - **[INTEGRATION.md](./INTEGRATION.md)** — how the SDK is used, primitive-by-primitive, with code.
 - **[FLOWVAULT_FEEDBACK.md](./FLOWVAULT_FEEDBACK.md)** — SDK gaps, workarounds, and a Clarity proposal.
-- **[SECURITY.md](./SECURITY.md)** — trust model, key custody, invariants.
-- **[implementation.md](./implementation.md)** — the full build plan and phase log.
+- **[SECURITY.md](./SECURITY.md)** — trust model, key custody, and the money invariants.

@@ -31,9 +31,9 @@ Clarity `circle-escrow` extension that would remove this trusted party entirely.
 
 | Key | Holder | Scope | Guard |
 |-----|--------|-------|-------|
-| `ESCROW_KEY` | Server env only | Escrow principal signing | `lib/env.ts` throws if imported client-side |
-| `MEMBER_1..3_KEY` | Server env only | Managed demo members (autopilot) | same |
-| Judge's wallet key | The judge's wallet | Wallet-join path | **never leaves the wallet** — `@stacks/connect` |
+| `ESCROW_KEY` | Server env only | Escrow signing — demo **and** every open `/create` circle | `lib/env.ts` throws if imported client-side |
+| `MEMBER_1..3_KEY` | Server env only | Managed demo members only (autopilot) | same |
+| Member's wallet key | The member's own wallet | Real `/create` join (`LobbyJoin`) | **never leaves the wallet** — `@stacks/connect` |
 
 Rules enforced in code:
 
@@ -78,10 +78,12 @@ The engine is covered by Vitest (`tests/`), asserting the properties that make t
   members' bonds. Rejected at the engine, before any tx is signed.
 - **Full lifecycle** — join → rounds → complete drives to `phase: "complete"` with a consistent
   ledger (`circle-engine`).
+- **Open-circle flow** — lobby fill → auto-form → escrow-driven rotation → bond return, including
+  the funding-verification and double-join guards (`open-circle`).
 
-Result: **13/13 tests green**, and the invariants are also asserted **live on-chain** by the
-`phase1:run` and `phase2:default` scripts (which read the real escrow vault after a run and confirm
-it drained to zero).
+Result: **19/19 tests green** across `circle-math`, `circle-default`, `circle-engine`, and
+`open-circle`, and the invariants are also asserted **live on-chain** by the `phase1:run` and
+`phase2:default` scripts (which read the real escrow vault after a run and confirm it drained to zero).
 
 ---
 
@@ -100,7 +102,10 @@ documented safety boundary, not a blanket retry.
 - **Not trustless** — the escrow principal is a trusted coordinator (see §1). Roadmap: native Clarity
   escrow.
 - **Testnet only** — no mainnet path exists; managed keys are testnet accounts.
-- **No auth / multi-tenant / multi-circle management** — single demo circle by design.
+- **No accounts / authorization.** `/create` circles have no login: a circle is reachable by whoever
+  holds its link, and membership is keyed purely by wallet address (a wallet can't join twice, and
+  funding txs are verified on-chain, but there is no organiser role or access control). Fine for a
+  testnet demo; a production build would add auth and abuse limits.
 - **JSON-file ledger, not a database** — fine for a demo, not for production durability/concurrency.
 - **No formal audit** — this is a bounty MVP; the Clarity extension in `FLOWVAULT_FEEDBACK.md` is the
   component that would warrant one before any real value moves.

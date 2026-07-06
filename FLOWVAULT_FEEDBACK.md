@@ -19,7 +19,7 @@
 |---|-----|----------|--------------------|-------|
 | 1 | No native multi-recipient split | High | Sequence N−1 single splits per round | `lib/circle-engine.ts` |
 | 2 | Single lock bucket per principal | Medium | One shared `endBlock` for all bonds | `lib/circle-engine.ts` |
-| 3 | Self-lock only — no third-party clawback | High (trust model) | App-run escrow *principal* holds keys | `lib/members.ts`, `SECURITY.md` |
+| 3 | Self-lock only — no third-party clawback | High (trust model) | App-run escrow *principal* holds keys | `lib/members.ts`, `lib/escrow-actor.ts`, `SECURITY.md` |
 | 4 | Routing rules apply on the *next* deposit (stateful) | Medium | Broadcast rules → await confirm → deposit | `lib/flow.ts` |
 | 5 | Inconsistent txid field across signer modes | Low | `extractTxid()` / `txidOf()` normalizers | `lib/flow.ts`, `lib/wallet.ts` |
 | 6 | BigInt Clarity args break over JSON-RPC to wallets | Medium | Hex-serialize `functionArgs` + post-conditions | `lib/wallet.ts` |
@@ -188,8 +188,9 @@ circles.
 - **All three primitives compose cleanly.** Lock / Split / Hold genuinely cover a real financial
   instrument end-to-end — we didn't have to fake anything; every step is a real testnet tx.
 - **Dual signer modes are excellent.** `senderKey` for backend automation and `contractCallExecutor`
-  for browser wallets let us serve *both* a self-driving demo and a real judge-signs-it-themselves
-  path from the same code — the wallet join reuses the identical create-strategy + deposit move.
+  for browser wallets let us serve *both* a self-driving managed demo and the real-user `/create`
+  flow — where members join and fund with their own wallets — from the same code. The wallet join
+  reuses the identical create-strategy + deposit move the engine makes.
 - **`getVaultState` is the right read model.** `total / locked / unlocked / lockUntilBlock /
   currentBlock` is exactly what an auditable UI needs; our live escrow-proof panel reads straight
   from it.

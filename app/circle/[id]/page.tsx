@@ -175,9 +175,13 @@ function CircleBody({
 
         {landed && <OutcomeReveal recipient={landed} pot={pot} complete={circle.phase === "complete"} />}
 
-        <div>
-          <AutopilotButton circleId={id} open={isOpen} onComplete={onRefetchNeeded} />
-        </div>
+        {/* Nothing to run once a circle is complete (e.g. the seeded demo) — every
+            transaction has already settled, so the button would be a no-op. */}
+        {circle.phase !== "complete" && (
+          <div>
+            <AutopilotButton circleId={id} open={isOpen} onComplete={onRefetchNeeded} />
+          </div>
+        )}
 
         <div>
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-fg-muted">

@@ -38,16 +38,23 @@ lib/
   constants.ts       # contract targets, circle economics (bond, contribution, lock window)
   flow.ts            # thin typed wrappers over flowvault-sdk  (senderKey / backend mode)
   wallet.ts          # browser signing bridge                 (contractCallExecutor mode)
-  members.ts         # the members + escrow, addresses derived from keys
-  circle-engine.ts   # the state machine that composes Lock/Split/Hold into a circle
+  members.ts         # the managed demo members + escrow, addresses derived from keys
+  escrow-actor.ts    # escrow-only signer for open circles (needs just ESCROW_KEY)
+  circle-engine.ts   # managed-demo state machine — composes Lock/Split/Hold into a circle
+  open-circle.ts     # real-user engine — fund-upfront lobby, escrow auto-rotation
   ledger.ts          # JSON persistence of rounds + txids
 app/api/
-  orchestrator/route.ts  # POST — drives the managed circle (server-only signing)
+  orchestrator/route.ts  # POST — drives the managed demo circle (server-only signing)
   circle/route.ts        # GET  — reads live circle + escrow state for the UI
+  open/create/route.ts   # POST — create an open lobby (ledger-only, no keys)
+  open/join/route.ts     # POST — verify a member's funding tx, add them, auto-form when full
+  open/advance/route.ts  # POST — escrow-signed rotation of a formed open circle
 ```
 
-The engine (`lib/circle-engine.ts`) is deliberately a **reusable layer**: a documented TypeScript
-state machine over `flowvault-sdk` that anyone could fork to build their own circle variant.
+Both engines are deliberately a **reusable layer**: documented TypeScript state machines over
+`flowvault-sdk` that anyone could fork. `circle-engine.ts` drives the managed demo (server-held
+members); `open-circle.ts` drives the real-user flow, where members join with their own wallets and
+the escrow auto-rotates the prepaid pot.
 
 ---
 
@@ -89,8 +96,9 @@ move so the demo and the real-user path are identical:
 new FlowVault({ network: "testnet", senderKey, ...contracts })
 ```
 
-Drives the managed 3-member demo circle end-to-end (the "Run the circle live" autopilot). Keys are
-**server-only** (see `SECURITY.md`) and never reach the browser.
+Drives the managed 3-member demo circle end-to-end (the "Run the circle live" autopilot), and signs
+the escrow's LOCK / rotation / bond-return moves for open circles. Keys are **server-only** (see
+`SECURITY.md`) and never reach the browser.
 
 ### b) Browser wallet — `contractCallExecutor` (`lib/wallet.ts`)
 
@@ -98,10 +106,12 @@ Drives the managed 3-member demo circle end-to-end (the "Run the circle live" au
 new FlowVault({ network: "testnet", senderAddress, contractCallExecutor: executor, ...contracts })
 ```
 
-Lets a judge **join a round with their own wallet** (Leather / Xverse) via `@stacks/connect` v8. The
-executor bridges the SDK's request onto `request('stx_callContract', …)`, hex-serializing Clarity
-args + post-conditions first (required — see `FLOWVAULT_FEEDBACK.md §6`). The judge signs the exact
-same SPLIT-to-escrow → deposit that the managed engine makes — no private key ever leaves the wallet.
+Powers the real-user **`/create`** flow: a member **joins a circle with their own wallet**
+(Leather / Xverse) via `@stacks/connect` v8, funding their full upfront obligation
+(`bond + (N−1) × contribution`) into the escrow (`components/LobbyJoin.tsx`). The executor bridges the
+SDK's request onto `request('stx_callContract', …)`, hex-serializing Clarity args + post-conditions
+first (required — see `FLOWVAULT_FEEDBACK.md §6`). The member signs the exact same
+SPLIT-to-escrow → deposit that the managed engine makes — no private key ever leaves the wallet.
 
 ---
 
