@@ -10,7 +10,6 @@ import { MemberCard } from "@/components/MemberCard";
 import { RoundTimeline } from "@/components/RoundTimeline";
 import { AutopilotButton } from "@/components/AutopilotButton";
 import { BitcoinBadge } from "@/components/BitcoinBadge";
-import { ConnectJoin } from "@/components/ConnectJoin";
 import { LobbyJoin } from "@/components/LobbyJoin";
 import { CopyLink } from "@/components/CopyLink";
 import { ExplorerLink } from "@/components/ExplorerLink";
@@ -202,16 +201,6 @@ function CircleBody({
       {/* Right: proof + ledger */}
       <aside className="flex flex-col gap-6">
         <BitcoinBadge variant="full" />
-
-        {/* The demo "feel the move yourself" join card is only for the managed
-            demo circle; open circles use the real lobby-join flow instead. */}
-        {!isOpen && (
-          <ConnectJoin
-            escrowAddress={circle.escrow.address}
-            escrowName="the Sanctuary escrow"
-            bond={circle.bond}
-          />
-        )}
 
         <EscrowProof circle={circle} />
 

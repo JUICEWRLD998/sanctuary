@@ -6,10 +6,7 @@ import { Menu, X } from "lucide-react";
 import { BitcoinBadge } from "./BitcoinBadge";
 
 /** Routing destinations shared by the desktop bar and the mobile dropdown. */
-const LINKS = [
-  { href: "/circle/demo", label: "Demo" },
-  { href: "/circle/live", label: "Live circle" },
-];
+const LINKS = [{ href: "/circle/demo", label: "Demo" }];
 
 /** A single desktop top-nav link. */
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
