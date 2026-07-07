@@ -29,8 +29,9 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 // Real testnet runs wait on block confirmations; allow a generous ceiling on
-// platforms that honour it (e.g. Vercel). Local dev is unbounded.
-export const maxDuration = 800;
+// platforms that honour it. 300s is the max on Vercel's Hobby plan (Pro allows
+// up to 800). Local dev is unbounded.
+export const maxDuration = 300;
 
 const DEFAULT_ID = "demo";
 

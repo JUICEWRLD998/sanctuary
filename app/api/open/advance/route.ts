@@ -14,7 +14,9 @@ import { advanceOpenCircle } from "@/lib/open-circle";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 // Real testnet runs wait on block confirmations across several rounds.
-export const maxDuration = 800;
+// 300s is the ceiling on Vercel's Hobby plan (Pro allows up to 800); raise this
+// if deploying on Pro and rounds routinely need more headroom.
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   let body: { id?: string; confirm?: boolean };
