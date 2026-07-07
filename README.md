@@ -132,8 +132,20 @@ Because every member's contributions are **prepaid into the escrow at join**, th
 rotation itself — the circle is genuinely self-driving, and no member can default mid-circle.
 
 **Tech:** Next.js 14 (App Router, TypeScript) · Tailwind CSS · Framer Motion · `flowvault-sdk` ·
-`@stacks/connect` · `@stacks/transactions`. Persistence is a JSON ledger per circle (no database) so
-the whole audit trail is diffable and portable.
+`@stacks/connect` · `@stacks/transactions` · **Neon** (serverless Postgres).
+
+**Persistence.** Each circle's entire life is one `CircleState` document (roster, rounds, and every
+on-chain txid — the audit trail). It is stored behind a small backend-agnostic facade (`lib/store.ts`)
+with two interchangeable backends, selected at runtime by whether `DATABASE_URL` is set:
+
+- **Neon serverless Postgres** — production. A single `circles (id TEXT PK, state JSONB)` table,
+  accessed over HTTP via `@neondatabase/serverless` (no connection pool, so it's safe in Vercel's
+  per-request serverless functions). This is what makes the app deployable — Vercel's filesystem is
+  read-only, so user-created circles need a durable store.
+- **JSON files** (`data/circles/*.json`) — local development and the `tsx` scripts, unchanged.
+
+The two demo circles (`demo`, `default-demo`) are **bundled into the app** (`lib/seeds.ts`), so the
+`/circle/demo` proof pages render in production with zero database rows and no seeding step.
 
 ---
 
@@ -175,12 +187,17 @@ Signing keys are **server-only** and read from `.env.local` (gitignored). See
 [`.env.example`](./.env.example):
 
 ```
+DATABASE_URL=      # Neon Postgres connection string — required in production (see below)
 ESCROW_KEY=        # the app-run escrow principal — the ONLY key /create needs
 MEMBER_1_KEY=      # managed demo members that drive /circle/demo (join / payout order)
 MEMBER_2_KEY=      # the app reads exactly CIRCLE.memberCount of these (currently 3)
 MEMBER_3_KEY=
 ```
 
+- **`DATABASE_URL`** points at a **Neon** serverless Postgres database. Set it and circles persist to
+  the DB; leave it unset locally and they persist to `data/circles/*.json` instead. On Vercel it is
+  **required** (read-only filesystem) — connecting a Neon database in the Vercel dashboard injects it
+  automatically. The bundled demo circles need no database.
 - **Open circles (`/create`)** need only `ESCROW_KEY` — members sign with their own wallets.
 - **The managed `demo` circle** additionally needs `MEMBER_1..3_KEY`.
 - Without keys the app still builds and renders read-only paths; signing routes return a clear
