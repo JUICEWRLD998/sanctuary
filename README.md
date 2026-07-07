@@ -42,7 +42,13 @@ Two ways to experience it:
 | Route | What it is |
 |-------|-----------|
 | **`/circle/demo`** | A **completed** 3-member circle. A full lifecycle already ran on testnet — **14 real transactions** you can click straight through to the Hiro explorer. Nothing to run; it already happened. The always-works proof. |
-| **`/create`** | **Start your own real circle.** Set the size, contribution, and bond; share the invite link; each member joins with **their own wallet** (Leather / Xverse) and funds their share upfront. When the last seat fills, the circle auto-forms, locks the bonds, and the pot begins rotating. |
+| **`/create`** | **Start your own real circle.** Set the size, contribution, and bond; share the invite link; each member joins with **their own wallet** (Leather / Xverse) and funds their share upfront. When the last seat fills, the circle auto-forms, locks the bonds, and the pot begins rotating.
+
+## AI assistant
+
+Sanctuary has includes a built-in AI assistant that can answer questions about how Sanctuary works,
+rotating savings circles, Bitcoin and Stacks, and how to get started. It is designed to help users
+understand the product quickly and feel supported while exploring or creating a circle.
 
 
 ## How FlowVault powers it
@@ -144,7 +150,6 @@ A complete 3-member `demo` lifecycle = **14 real transactions** (3 bonds → 1 e
 Every other event links to the explorer directly from `/circle/demo`.
 
 ---
-
 ## Getting started
 
 ```bash
