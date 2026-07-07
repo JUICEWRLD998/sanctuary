@@ -16,6 +16,7 @@
     "phase2:default": "tsx scripts/simulate-default.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@stacks/connect": "^8.2.6",
     "@stacks/network": "^7.5.0",
     "@stacks/transactions": "^7.5.0",

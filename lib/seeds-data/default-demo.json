@@ -1,0 +1,236 @@
+{
+  "id": "default-demo",
+  "phase": "complete",
+  "memberCount": 3,
+  "contribution": "1",
+  "bond": "1",
+  "payoutOrder": [
+    0,
+    1,
+    2
+  ],
+  "currentRound": 3,
+  "createdBlock": 4029154,
+  "endBlock": 4029184,
+  "escrow": {
+    "address": "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT",
+    "bondLockTxid": "5e453aa32f4c286498fb17c5e4731834b338a07f9287be65dba7309746db1168",
+    "snapshot": {
+      "total": "0",
+      "locked": "0",
+      "unlocked": "0",
+      "lockUntilBlock": 4029184,
+      "currentBlock": 4029184,
+      "at": "2026-07-03T12:58:23.917Z"
+    }
+  },
+  "rounds": [
+    {
+      "index": 0,
+      "recipientId": 0,
+      "status": "complete",
+      "contributionTxids": [
+        "f162a30f7e2d9357ffa0541d8db487dd43d52b337e3ad51e86cf47ada8409e4d"
+      ],
+      "potUsdcx": "2",
+      "defaulters": [
+        1
+      ],
+      "shortfallUsdcx": "1",
+      "compensationTxids": [
+        "81ad0fd832509f0c547939219d4b09de2c82ed9dc67200f612c620e95ca7d985"
+      ]
+    },
+    {
+      "index": 1,
+      "recipientId": 1,
+      "status": "complete",
+      "contributionTxids": [
+        "cfc4d77481cc941fb924c95c222be2bbbb243ef833f46b9e642d6e3355cb531f",
+        "a331d4dceb084c21125893be27739e69e0d491d6a4c583ab511d96ec2785658a"
+      ],
+      "potUsdcx": "2",
+      "defaulters": [],
+      "shortfallUsdcx": "0",
+      "compensationTxids": []
+    },
+    {
+      "index": 2,
+      "recipientId": 2,
+      "status": "complete",
+      "contributionTxids": [
+        "645eaeb2f090bd4b68598ef3f5653323193c75d1af507987042c998185145add",
+        "74e8c3afe11691037a2cee235eeb85723ee52f05997965b9f0704be5e95aee6f"
+      ],
+      "potUsdcx": "2",
+      "defaulters": [],
+      "shortfallUsdcx": "0",
+      "compensationTxids": []
+    }
+  ],
+  "events": [
+    {
+      "kind": "bond",
+      "label": "Amara bonds 1 USDCx into escrow",
+      "actor": "STB3TXXN46EGCDN2E87GRVV0XQ7H4AA11CXJ11NX",
+      "recipient": "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT",
+      "amount": "1",
+      "txid": "54846d5985c291994d779823cbe11641052ce3cebaa7a94fc978c5c18e5d6dd7",
+      "at": "2026-07-03T12:34:54.286Z"
+    },
+    {
+      "kind": "bond",
+      "label": "Chidi bonds 1 USDCx into escrow",
+      "actor": "ST2AMPY7BWAQ35ESCAYJ994JFD90GMPVJC08QCA5T",
+      "recipient": "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT",
+      "amount": "1",
+      "txid": "08694bad24726c62c7d6cf767e3305268c606d2490798eda955557df0a59a6db",
+      "at": "2026-07-03T12:35:12.817Z"
+    },
+    {
+      "kind": "bond",
+      "label": "Fatima bonds 1 USDCx into escrow",
+      "actor": "STV7MHKCKHSFW9Z3B26Q77WDQDH3J9BR407EZ56V",
+      "recipient": "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT",
+      "amount": "1",
+      "txid": "fa78df49bea8ff5663044ad0dfa00edf3f436bcc18ba4cdd516824e57137727d",
+      "at": "2026-07-03T12:35:30.667Z"
+    },
+    {
+      "kind": "escrow-lock",
+      "label": "Escrow locks 3 USDCx of bonds until block 4029184",
+      "actor": "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT",
+      "amount": "3",
+      "txid": "5e453aa32f4c286498fb17c5e4731834b338a07f9287be65dba7309746db1168",
+      "at": "2026-07-03T12:35:49.069Z"
+    },
+    {
+      "kind": "default",
+      "label": "Chidi misses round 1 — escrow will cover 1 USDCx from their bond",
+      "round": 0,
+      "actor": "ST2AMPY7BWAQ35ESCAYJ994JFD90GMPVJC08QCA5T",
+      "recipient": "STB3TXXN46EGCDN2E87GRVV0XQ7H4AA11CXJ11NX",
+      "amount": "1",
+      "at": "2026-07-03T12:35:49.091Z"
+    },
+    {
+      "kind": "contribution",
+      "label": "Fatima → Amara: 1 USDCx (round 1)",
+      "round": 0,
+      "actor": "STV7MHKCKHSFW9Z3B26Q77WDQDH3J9BR407EZ56V",
+      "recipient": "STB3TXXN46EGCDN2E87GRVV0XQ7H4AA11CXJ11NX",
+      "amount": "1",
+      "txid": "f162a30f7e2d9357ffa0541d8db487dd43d52b337e3ad51e86cf47ada8409e4d",
+      "at": "2026-07-03T12:36:07.112Z"
+    },
+    {
+      "kind": "payout",
+      "label": "Amara receives the round 1 pot: 2 USDCx (1 contributed now, 1 USDCx covered by escrow at completion)",
+      "round": 0,
+      "recipient": "STB3TXXN46EGCDN2E87GRVV0XQ7H4AA11CXJ11NX",
+      "amount": "2",
+      "at": "2026-07-03T12:36:07.118Z"
+    },
+    {
+      "kind": "contribution",
+      "label": "Amara → Chidi: 1 USDCx (round 2)",
+      "round": 1,
+      "actor": "STB3TXXN46EGCDN2E87GRVV0XQ7H4AA11CXJ11NX",
+      "recipient": "ST2AMPY7BWAQ35ESCAYJ994JFD90GMPVJC08QCA5T",
+      "amount": "1",
+      "txid": "cfc4d77481cc941fb924c95c222be2bbbb243ef833f46b9e642d6e3355cb531f",
+      "at": "2026-07-03T12:36:25.016Z"
+    },
+    {
+      "kind": "contribution",
+      "label": "Fatima → Chidi: 1 USDCx (round 2)",
+      "round": 1,
+      "actor": "STV7MHKCKHSFW9Z3B26Q77WDQDH3J9BR407EZ56V",
+      "recipient": "ST2AMPY7BWAQ35ESCAYJ994JFD90GMPVJC08QCA5T",
+      "amount": "1",
+      "txid": "a331d4dceb084c21125893be27739e69e0d491d6a4c583ab511d96ec2785658a",
+      "at": "2026-07-03T12:36:43.497Z"
+    },
+    {
+      "kind": "payout",
+      "label": "Chidi receives the round 2 pot: 2 USDCx",
+      "round": 1,
+      "recipient": "ST2AMPY7BWAQ35ESCAYJ994JFD90GMPVJC08QCA5T",
+      "amount": "2",
+      "at": "2026-07-03T12:36:43.501Z"
+    },
+    {
+      "kind": "contribution",
+      "label": "Amara → Fatima: 1 USDCx (round 3)",
+      "round": 2,
+      "actor": "STB3TXXN46EGCDN2E87GRVV0XQ7H4AA11CXJ11NX",
+      "recipient": "STV7MHKCKHSFW9Z3B26Q77WDQDH3J9BR407EZ56V",
+      "amount": "1",
+      "txid": "645eaeb2f090bd4b68598ef3f5653323193c75d1af507987042c998185145add",
+      "at": "2026-07-03T12:37:02.282Z"
+    },
+    {
+      "kind": "contribution",
+      "label": "Chidi → Fatima: 1 USDCx (round 3)",
+      "round": 2,
+      "actor": "ST2AMPY7BWAQ35ESCAYJ994JFD90GMPVJC08QCA5T",
+      "recipient": "STV7MHKCKHSFW9Z3B26Q77WDQDH3J9BR407EZ56V",
+      "amount": "1",
+      "txid": "74e8c3afe11691037a2cee235eeb85723ee52f05997965b9f0704be5e95aee6f",
+      "at": "2026-07-03T12:37:20.615Z"
+    },
+    {
+      "kind": "payout",
+      "label": "Fatima receives the round 3 pot: 2 USDCx",
+      "round": 2,
+      "recipient": "STV7MHKCKHSFW9Z3B26Q77WDQDH3J9BR407EZ56V",
+      "amount": "2",
+      "at": "2026-07-03T12:37:20.621Z"
+    },
+    {
+      "kind": "note",
+      "label": "Escrow reclaims 3 USDCx (lock expired)",
+      "actor": "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT",
+      "amount": "3",
+      "txid": "cd2b98daf8eb59ea0c5684fc4013faca7899f37b2da8cca658f8592f93de6b84",
+      "at": "2026-07-03T12:57:28.093Z"
+    },
+    {
+      "kind": "compensation",
+      "label": "Escrow makes Amara whole for round 1: 1 USDCx from forfeited bonds",
+      "round": 0,
+      "actor": "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT",
+      "recipient": "STB3TXXN46EGCDN2E87GRVV0XQ7H4AA11CXJ11NX",
+      "amount": "1",
+      "txid": "81ad0fd832509f0c547939219d4b09de2c82ed9dc67200f612c620e95ca7d985",
+      "at": "2026-07-03T12:57:46.544Z"
+    },
+    {
+      "kind": "bond-return",
+      "label": "Escrow returns Amara's 1 USDCx bond",
+      "actor": "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT",
+      "recipient": "STB3TXXN46EGCDN2E87GRVV0XQ7H4AA11CXJ11NX",
+      "amount": "1",
+      "txid": "3c71fedff67ad40d82fec913639951951b52bd3a2dc429df8c0c0809d657554c",
+      "at": "2026-07-03T12:58:05.278Z"
+    },
+    {
+      "kind": "note",
+      "label": "Chidi forfeits their 1 USDCx bond — it covered their missed contribution(s)",
+      "actor": "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT",
+      "recipient": "ST2AMPY7BWAQ35ESCAYJ994JFD90GMPVJC08QCA5T",
+      "amount": "1",
+      "at": "2026-07-03T12:58:05.281Z"
+    },
+    {
+      "kind": "bond-return",
+      "label": "Escrow returns Fatima's 1 USDCx bond",
+      "actor": "ST3BBEF5Q148CCEZ14Y0EJDTRAHWMKDEQTJVZ15CT",
+      "recipient": "STV7MHKCKHSFW9Z3B26Q77WDQDH3J9BR407EZ56V",
+      "amount": "1",
+      "txid": "2fd4a7c2342e62322e00efd28f7742377ae2f4417fce8ac14811322d44b82bb7",
+      "at": "2026-07-03T12:58:23.912Z"
+    }
+  ],
+  "updatedAt": "2026-07-03T12:58:23.917Z"
+}

@@ -24,10 +24,46 @@ const jetBrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const SITE_TITLE = "Sanctuary — Bitcoin-secured savings circles";
+const SITE_DESCRIPTION =
+  "The oldest way to save, reimagined as programmable, Bitcoin-secured money. A rotating savings circle (susu / tanda) running live on Stacks with auditable on-chain proof.";
+
+// Absolute base for OG/Twitter image URLs. Vercel exposes the deployment host as
+// VERCEL_URL (no protocol); fall back to localhost for local dev. Override with
+// NEXT_PUBLIC_SITE_URL to pin a custom production domain.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  ? process.env.NEXT_PUBLIC_SITE_URL
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "Sanctuary — Bitcoin-secured savings circles",
-  description:
-    "The oldest way to save, reimagined as programmable, Bitcoin-secured money. A rotating savings circle (susu / tanda) running live on Stacks with auditable on-chain proof.",
+  metadataBase: new URL(siteUrl),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  icons: {
+    icon: "/icon.svg",
+  },
+  openGraph: {
+    type: "website",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    siteName: "Sanctuary",
+    images: [
+      {
+        url: "/sanctuary-og.png",
+        width: 1424,
+        height: 752,
+        alt: "Sanctuary — Bitcoin-secured savings circles",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/sanctuary-og.png"],
+  },
 };
 
 export default function RootLayout({
