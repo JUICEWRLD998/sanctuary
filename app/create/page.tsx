@@ -19,6 +19,7 @@ export default function CreateCirclePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [touched, setTouched] = useState({ title: false, contribution: false, bond: false });
 
   const upfront = Number(bond) + (capacity - 1) * Number(contribution);
   const pot = (capacity - 1) * Number(contribution);
@@ -65,6 +66,12 @@ export default function CreateCirclePage() {
               each member opens it, joins with their own wallet, and funds their share upfront. When
               every seat is taken, the pot starts rotating automatically.
             </p>
+            <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3">
+              <p className="text-xs text-fg-muted">
+                <span className="font-semibold text-primary">💡 Tip:</span> Start with a small circle (3 members) 
+                and low amounts to test the flow. Each member needs testnet USDCx and STX for gas.
+              </p>
+            </div>
           </header>
 
           <div className="mt-8 flex flex-col gap-5 rounded-lg border border-border bg-surface p-5">
@@ -77,7 +84,11 @@ export default function CreateCirclePage() {
                 maxLength={60}
                 placeholder="e.g. Lagos market women, July"
                 className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-fg placeholder:text-fg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-describedby="name-hint"
               />
+              <span id="name-hint" className="text-xs text-fg-muted">
+                Choose a memorable name that reflects your group&apos;s purpose
+              </span>
             </label>
 
             <label className="flex flex-col gap-1.5 text-sm text-fg">

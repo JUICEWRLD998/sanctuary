@@ -83,7 +83,14 @@ export default function CirclePage({ params }: { params: { id: string } }) {
         </div>
       </header>
 
-      {loading && <CircleSkeleton />}
+      {loading && (
+        <div className="mt-10">
+          <CircleSkeleton />
+          <p className="mt-4 text-center text-sm text-fg-muted">
+            Loading circle data from testnet...
+          </p>
+        </div>
+      )}
 
       {!loading && error && (
         <div className="mt-10 rounded-lg border border-border bg-surface p-8 text-center">

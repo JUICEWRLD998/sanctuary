@@ -61,7 +61,7 @@ export function CircleRing({
   const isLive = phase === "active" && recipient != null;
 
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-md bg-vault-glow">
+    <div className="relative mx-auto aspect-square w-full max-w-md bg-vault-glow px-4 sm:px-0">
       {/* Spokes + flowing pot token (SVG scales with the container). */}
       <svg
         viewBox="0 0 100 100"

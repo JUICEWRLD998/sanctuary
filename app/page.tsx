@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Check, ShieldCheck } from "lucide-react";
 import { BitcoinBadge } from "@/components/BitcoinBadge";
 import { Avatar } from "@/components/Avatar";
@@ -13,7 +14,7 @@ import { CLOSING, HOW_IT_WORKS, PEOPLE, STORY } from "@/content/story";
  */
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
+    <main id="main-content" className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
       {/* Hero */}
       <section className="flex flex-col items-center gap-6 text-center">
         <Reveal>
@@ -29,6 +30,22 @@ export default function Home() {
         </Reveal>
         <Reveal index={3}>
           <p className="max-w-xl text-balance text-fg-muted">{STORY.subhead}</p>
+        </Reveal>
+        <Reveal index={4}>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/circle/demo"
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-md bg-gradient-gold px-6 py-3 font-medium text-primary-fg shadow-glow transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+            >
+              View Live Demo
+            </Link>
+            <Link
+              href="/create"
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-6 py-3 font-medium text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Start Your Circle
+            </Link>
+          </div>
         </Reveal>
       </section>
 
