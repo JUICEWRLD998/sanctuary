@@ -104,19 +104,6 @@ export default function Home() {
         </ul>
       </section>
 
-      {/* Bitcoin-finality framing */}
-      <section className="mt-24 sm:mt-32" aria-labelledby="proof-heading">
-        <Reveal>
-          <div className="rounded-lg border border-primary/30 bg-surface bg-vault-glow p-8 text-center shadow-card sm:p-12">
-            <ShieldCheck className="mx-auto h-8 w-8 text-primary" aria-hidden="true" />
-            <h2 id="proof-heading" className="mt-4 text-2xl font-bold sm:text-3xl">
-              Not a mock-up. Real money, secured by Bitcoin.
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-balance text-fg-muted">{STORY.proof}</p>
-          </div>
-        </Reveal>
-      </section>
-
       {/* Closing — why it matters */}
       <section className="mt-24 sm:mt-32" aria-labelledby="closing-heading">
         <Reveal>
