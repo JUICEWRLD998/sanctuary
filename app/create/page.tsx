@@ -131,6 +131,46 @@ export default function CreateCirclePage() {
               </label>
             </div>
 
+            {/* Round Schedule - Coming Soon */}
+            <div className="rounded-lg border border-dashed border-border bg-surface-2/50 p-4 opacity-60">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-fg">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Round Schedule
+                  </h3>
+                  <p className="mt-1 text-xs text-fg-muted">
+                    Set automatic timing for round advancement (e.g., monthly payouts)
+                  </p>
+                </div>
+                <span className="ml-3 shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                  Coming Soon
+                </span>
+              </div>
+              <div className="mt-3 space-y-2 text-xs text-fg-muted">
+                <div className="flex items-center gap-2">
+                  <svg className="h-3.5 w-3.5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Daily, weekly, or monthly intervals</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="h-3.5 w-3.5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Automatic round advancement on schedule</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="h-3.5 w-3.5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Manual mode always available as fallback</span>
+                </div>
+              </div>
+            </div>
+
             {/* Live economics summary so the organizer sees what members commit to. */}
             <dl className="grid grid-cols-2 gap-2 rounded-md bg-surface-2 p-3 text-center">
               <div>
