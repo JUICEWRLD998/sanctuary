@@ -182,3 +182,22 @@ export async function storeDelete(id: string): Promise<void> {
   if (hasDatabase()) await dbDelete(id);
   else await fileDelete(id);
 }
+
+/**
+ * Load all circles (for browse/discovery pages).
+ * Loads each circle by ID, filtering out any that fail to load.
+ */
+export async function getAllCircles(): Promise<CircleState[]> {
+  const ids = await storeList();
+  const circles = await Promise.all(
+    ids.map(async (id) => {
+      try {
+        return await storeLoad(id);
+      } catch (err) {
+        console.error(`Failed to load circle ${id}:`, err);
+        return null;
+      }
+    })
+  );
+  return circles.filter((c): c is CircleState => c !== null);
+}

@@ -6,7 +6,11 @@ import { Menu, X, Bot } from "lucide-react";
 import { AiChat } from "./AiChat";
 
 /** Routing destinations shared by the desktop bar and the mobile dropdown. */
-const LINKS = [{ href: "/circle/demo", label: "Demo" }];
+const LINKS = [
+  { href: "/browse", label: "Browse" },
+  { href: "/my-circles", label: "My Circles" },
+  { href: "/circle/demo", label: "Demo" },
+];
 
 /** A single desktop top-nav link. */
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {

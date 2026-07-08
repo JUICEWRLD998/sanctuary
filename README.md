@@ -37,20 +37,23 @@ Sanctuary runs the exact same ritual, but the money is programmable and the ledg
 - **Every move is auditable.** Each contribution, lock, and payout is a verifiable Stacks transaction,
   anchored to Bitcoin. The escrow balance can be read live; at the end it drains to exactly zero.
 
-Two ways to experience it:
+Four ways to experience it:
 
 | Route | What it is |
 |-------|-----------|
 | **`/circle/demo`** | A **completed** 3-member circle. A full lifecycle already ran on testnet — **14 real transactions** you can click straight through to the Hiro explorer. Nothing to run; it already happened. The always-works proof. |
+| **`/browse`** | **Discover all circles.** Browse all active and completed circles with filterable views. See member counts, contribution amounts, and status at a glance. Click any circle to view full details and join open circles. |
+| **`/my-circles`** | **Your personal dashboard.** Connect your wallet to see all circles you've joined. Track your position, round progress, and upcoming payouts. One place to manage all your savings circles. |
 | **`/create`** | **Start your own real circle.** Set the size, contribution, and bond; share the invite link; each member joins with **their own wallet** (Leather / Xverse) and funds their share upfront. When the last seat fills, the circle auto-forms, locks the bonds, and the pot begins rotating.
 
 ## AI assistant
 
-Sanctuary has includes a built-in AI assistant that can answer questions about how Sanctuary works,
+Sanctuary includes a built-in AI assistant that can answer questions about how Sanctuary works,
 rotating savings circles, Bitcoin and Stacks, and how to get started. It is designed to help users
 understand the product quickly and feel supported while exploring or creating a circle.
 
 
+---
 ## How FlowVault powers it
 
 Sanctuary is composed **entirely** from FlowVault's routing primitives — it never invents its own
@@ -87,12 +90,16 @@ Primitive-by-primitive detail with code lives in **[INTEGRATION.md](./INTEGRATIO
 ```
 Browser (Next.js App Router, client components)
   /                     landing — the human story + how a circle works
+  /browse               discover all circles with filterable views (open, active, completed)
+  /my-circles           personal dashboard showing your joined circles (requires wallet)
   /circle/[id]          circle hero (rotation ring, timeline, live escrow read)
                         └─ open + forming? → lobby view (LobbyJoin, own-wallet)
   /create               organiser sets circle shape → shareable invite link
 
 API routes (Node runtime, server-only signing)
   GET  /api/circle          read a circle's live state + escrow (snapshot if complete)
+  GET  /api/circles/list    list all circles with preview data (for browse page)
+  GET  /api/user/circles    get circles for a specific wallet address (for dashboard)
   POST /api/orchestrator    drive the managed demo circle (senderKey mode)
   POST /api/open/create     create an open lobby (ledger-only, no keys)
   POST /api/open/join       verify a member's funding tx, add them, auto-form when full
@@ -174,6 +181,8 @@ Then:
 
 - Open **`/`** for the story, then the **Demo** nav link (`/circle/demo`) to click through a completed
   circle's real transactions.
+- Open **`/browse`** to discover all circles with filterable views (Open to Join, Active, Completed).
+- Open **`/my-circles`** and connect your wallet to see your personal dashboard of joined circles.
 - Open **`/create`** to start your own circle. Each member needs a Leather / Xverse wallet on **Stacks
   testnet** funded with **USDCx** (the token the circle moves). Each member funds
   `bond + (N−1) × contribution` upfront — e.g. a 3-member, 1-USDCx circle needs **3 USDCx** per member.
