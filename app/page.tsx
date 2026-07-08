@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, ShieldCheck } from "lucide-react";
+import { Check } from "lucide-react";
 import { BitcoinBadge } from "@/components/BitcoinBadge";
 import { Avatar } from "@/components/Avatar";
 import { Reveal } from "@/components/Reveal";
