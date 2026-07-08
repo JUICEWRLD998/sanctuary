@@ -19,7 +19,6 @@ export default function CreateCirclePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
-  const [touched, setTouched] = useState({ title: false, contribution: false, bond: false });
 
   const upfront = Number(bond) + (capacity - 1) * Number(contribution);
   const pot = (capacity - 1) * Number(contribution);
