@@ -9,6 +9,10 @@ FlowVault's **Lock · Split · Hold** primitives and settled with Bitcoin finali
 > FlowVault Builder Bounty submission · Stacks **testnet** · every transaction the app shows is real
 > and auditable on the Hiro explorer.
 
+Sanctuary is a custom Next.js app that adapts Scaffold Stacks conventions for an existing
+root-level project; it is not a generated Scaffold Stacks app. See
+[the integration feedback](./SCAFFOLD_STACKS_FEEDBACK.md) for details.
+
 ---
 
 ## The problem
