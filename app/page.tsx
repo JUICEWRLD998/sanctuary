@@ -34,6 +34,12 @@ export default function Home() {
         <Reveal index={4}>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
+              href="/demo"
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-md bg-gradient-gold px-6 py-3 font-medium text-primary-fg shadow-glow transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+            >
+              View Completed Demo
+            </Link>
+            <Link
               href="/create"
               className="inline-flex min-h-[48px] items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-6 py-3 font-medium text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
