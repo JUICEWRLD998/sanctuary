@@ -1,0 +1,17 @@
+# Sanctuary — Stacks testnet deployment settings.
+#
+# ⚠️ NEVER COMMIT A REAL MNEMONIC HERE. This file is gitignored for that reason
+# (see .gitignore). Use a dedicated testnet-only deployer, funded from the Hiro
+# faucet: https://explorer.hiro.so/sandbox/faucet?chain=testnet
+#
+# Fill in the mnemonic locally, then:
+#   stacksdapp deploy --network testnet --dry-run
+#   stacksdapp deploy --network testnet --yes --wait-confirm
+#
+# Scaffold Stacks installs a pre-commit hook that blocks likely seed phrases in
+# this file and Mainnet.toml. Do not use SCAFFOLD_ALLOW_COMMITTED_MNEMONIC=1 to
+# bypass it.
+
+[accounts.deployer]
+mnemonic = ""
+derivation = "m/44'/5757'/0'/0/0"

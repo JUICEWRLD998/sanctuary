@@ -1,0 +1,9 @@
+{
+  "network": "testnet",
+  "contracts": {
+    "sanctuary-circle": {
+      "contract_id": "ST25HHHPC11KZPASV0747YQ4PW7YSM5GV1MEJEMVM.sanctuary-circle",
+      "txid": "e6c7561c7bfc4483352b7ca31d2dddb7d6d1b8147950db45dfe161564008dd2e"
+    }
+  }
+}
